@@ -1,0 +1,160 @@
+Note: this file was downloaded from http://www.3dtotal.com/.  It is not licensed for commercial use.
+
+It was created by someone identified only as "Gabe".
+
+Explanation of file contents, as parsed into JSON by lwo_parser.py:
+[
+    // File consists of a single FORM chunk of type LWO2
+    ["FORM",
+     {"type": "LWO2",
+      "data":
+      [
+          // TAGS are strings that are referred to later in the document
+          ["TAGS", ["Bone.000", "Bone.001", "Bone.002", "Bone.003", "Bone.004", "Bone.005", "Bone.006", "Default",
+                    "cheveu", "cuir", "feather", "fleche", "fleche bout", "fleche bout-2", "gance", "latex", "linge",
+                    "metal", "metal doree", "sac", "soulier spawn", "yeu"]],
+
+          // Start of layer 0
+          ["LAYR", {"pivot": [0.0, 0.0, 0.0], "flags": 0, "number": 0, "parent": 0, "name": ""}],
+
+          // Points in this layer
+          ["PNTS", [[0.050569396466016769, 0.25307381153106689, 0.040062788873910904], ...]],
+
+          // Bounding box of this layer
+          ["BBOX", {"max": [0.24249054491519928, 0.41313189268112183, 0.14988040924072266],
+                    "min": [-0.46949055790901184, -0.45798909664154053, -0.048036031424999237]}],
+
+          // Vertex map associating each point in the above "PNTS" chunk with a "bras" weight.
+          // Unspecified vertices implicitly have a weight of 0.
+          ["VMAP", {"data": [[0, [1.0]], [1, [1.0]], ...], "type": "WGHT", "dimension": 1, "name": "bras"}],
+
+          // Vertex map associating each point with a UV texture map called "head".
+          ["VMAP", {"data": [[1454, [0.25044655799865723, 0.2221856415271759]], ...],
+                    "type": "TXUV", "dimension": 2, "name": "head"}],
+
+          // Vertex map associating each point with a "head" weight.
+          ["VMAP", {"data": [[1454, [1.0]], ...], "type": "WGHT", "dimension": 1, "name": "head"}],
+
+          // Vertex map associating each point with an "l-bras" weight.
+          ["VMAP", {"data": [[2801, [1.0]], ...], "type": "WGHT", "dimension": 1, "name": "l-bras"}],
+
+          // Vertex map associating each point with a UV texture map called "tete"
+          ["VMAP", {"data": [[2025, [0.99198585748672485, 0.63135188817977905]], ...],
+                    "type": "TXUV", "dimension": 2, "name": "tete"}],
+
+          // Vertex map associating each point with a UV texture map called "tete-cou" (fr.: "head-neck")
+          ["VMAP", {"data": [[2025, [0.045234467834234238, 0.68985176086425781]], ...],
+                    "type": "TXUV", "dimension": 2, "name": "tete-cou"}],
+
+          // Polygons of type "FACE" (regular, ordinary polygons).
+          // Numbers refer to points in the latest "PNTS" chunk.
+          ["POLS", {"type": "FACE", "polygons": [[0, [996, 997, 998, 999, 1000]], ...]}],
+
+          // Polygon tag map associating with each polygon in the
+          // above "POLS" chunk with a surface tag from the most
+          // recent "TAGS" chunk.  So, for example, the first entry
+          // associates the 0th polygon with the tag "metal doree".
+          ["PTAG", {"data": [[0, 18], ...], "type": "SURF"}],
+
+          // Polygons of type "PTCH" (largely undocumented).
+          ["POLS", {"type": "PTCH", "polygons": [[0, [0, 4, 5, 1]], ...]}],
+
+          // More surface tags
+          ["PTAG", {"data": [[0, 19], ...], "type": "SURF"}],
+
+          // Modifications to UV texture maps for polygons that lie on
+          // a "seam".  These seem to refer to the latest "VMAP" chunk
+          // with the same name, regardless of whether there are
+          // intervening "POLS" chunks.
+          ["VMAD", {"data": [[2941, 1425, [0.62739866971969604, 0.49960198998451233]], ...],
+                    "type": "TXUV", "dimension": 2, "name": "head"}],
+          ["VMAD", {"data": [[2029, 1723, [-0.00062888860702514648, 0.44912183284759521]], ...],
+                    "type": "TXUV", "dimension": 2, "name": "tete"}],
+          ["VMAD", {"data": [[2169, 1713, [1.0008734464645386, 0.52514880895614624]], ...],
+                    "type": "TXUV", "dimension": 2, "name": "tete-cou"}],
+
+          // Layer 2
+          ["LAYR", {"pivot": [0.0, 0.0, 0.0], "flags": 0, "number": 1, "parent": 0, "name": ""}],
+          ["PNTS", [[0.20677149295806885, 0.35704001784324646, -0.17605999112129211], ...]],
+          ["BBOX", {"max": [0.22394338250160217, 0.3623683750629425, 0.44658669829368591],
+                    "min": [0.20374749600887299, 0.20048975944519043, -0.26446667313575745]}],
+          ["POLS", {"type": "FACE", "polygons": [[0, [1052, 1053, 1054, 1055]], ...]}],
+          ["PTAG", {"data": [[0, 17], ...], "type": "SURF"}],
+          ["POLS", {"type": "PTCH", "polygons": [[0, [16, 17, 18, 19]], ...]}],
+          ["PTAG", {"data": [[0, 17], ...], "type": "SURF"}],
+
+          // Layer 3.  Note: some of the polygons in this layer are of
+          // type "BONE", which means the polygons are line segments
+          // representing the object's skeleton.  There are also some
+          // polygon tags of type "BONE", which presumably name the
+          // bones.
+          ["LAYR", {"pivot": [0.0, 0.0, 0.0], "flags": 0, "number": 2, "parent": 0, "name": ""}],
+          ["PNTS", [[-0.11318733543157578, 0.0085800010710954666, -0.085091404616832733], ...]],
+          ["BBOX", {"max": [-0.083499528467655182, 0.0085800010710954666, 0.019999999552965164],
+                    "min": [-0.12748733162879944, -0.04986124113202095, -0.77110236883163452]}],
+          ["POLS", {"type": "PTCH", "polygons": [[0, [1, 0, 8, 9]], ...]}],
+          ["PTAG", {"data": [[0, 7], ...], "type": "SURF"}],
+          ["POLS", {"type": "BONE", "polygons": [[0, [179, 169]], ...]}],
+          ["PTAG", {"data": [[0, 0], ...], "type": "BONE"}],
+          ["PTAG", {"data": [[0, 7], ...], "type": "SURF"}],
+
+          // Surface descriptions follow.
+          ["SURF", {"source": "", // Not derived from any other surface
+                    "name": "cheveu", // Fr. "hair"
+                    "attributes": [["COLR", {"envelope": 0, // Not sure what this means.  Perhaps it allows varying
+                                                            // this parameter externally?
+                                             "base-color": [0.88627451658248901, 0.83529412746429443,
+                                                            0.61960786581039429]}],
+                                   ["DIFF", {"intensity": 1.0, "envelope": 0}], // Diffuse shading value
+                                   ["SPEC", {"intensity": 0.0, "envelope": 0}], // Specular shading value
+                                   ["SMAN", 1.5620696544647217], // Max smoothing angle (radians)
+                                   ["SIDE", 3]]}], // Front-and-back polygons present
+          ["SURF", {"source": "",
+                    "name": "cuir", // Fr. "leather"
+                    "attributes": [["COLR", {"envelope": 0,
+                                             "base-color": [0.77999544143676758, 0.53415733575820923,
+                                                            0.30420386791229248]}],
+                                   ["DIFF", {"intensity": 1.0, "envelope": 0}],
+                                   ["SPEC", {"intensity": 0.0, "envelope": 0}],
+                                   ["SMAN", 1.5620696544647217],
+                                   ["SIDE", 3]]}],
+          ["SURF", {"source": "",
+                    "name": "Default",
+                    "attributes": [["COLR", {"envelope": 0,
+                                             "base-color": [0.78431373834609985, 0.78431373834609985,
+                                                            0.78431373834609985]}],
+                                   ["DIFF", {"intensity": 1.0, "envelope": 0}],
+                                   ["SMAN", 1.5625],
+                                   ["SIDE", 3],
+                                   ["BLOK", // Block holding texture layers and shaders
+                                    {"header":
+                                     ["GRAD", // Gradient texture
+                                      {"ordinal": "\u0080", // Stacking order
+                                       "block-attributes":
+                                       [["CHAN", "DIFF"], // Which texture channel is being shaded
+                                        ["OPAC", {"opacity": 1.0, "envelope": 0, "type": 0}], // Opacity of this layer
+                                        ["ENAB", 1], // 1=enabled
+                                        ["NEGA", 0]]}], // 0=not negated
+                                     "attributes":
+                                     [["PNAM", "Incidence Angle"], // Opacity determined by incidence angle
+                                      ["INAM", "(none)"], // Not derived w.r.t. any particular object
+                                      ["GRST", 0.0], // Input range start (degrees, presumably)
+                                      ["GREN", 90.0], // Input range end (degrees, presumably)
+                                      ["GRPT", 0], // Repeat mode (undefined)
+                                      ["FKEY", // Values to interpolate
+                                       [[0.0, [1.0, 1.0, 1.0, 1.0]],
+                                        [90.0, [0.60000002384185791, 0.60000002384185791, 0.60000002384185791, 1.0]]]],
+                                      ["IKEY", [1, 1]]]}]]}], // Interpolation type
+          ["SURF", {"source": "", "name": "feather", "attributes": [["COLR", {"envelope": 0, "base-color": [0.92120242118835449, 0.93998628854751587, 0.92590218782424927]}], ["DIFF", {"intensity": 1.0, "envelope": 0}], ["SPEC", {"intensity": 0.0, "envelope": 0}], ["SMAN", 1.5620696544647217], ["SIDE", 3]]}],
+          ["SURF", {"source": "", "name": "fleche", "attributes": [["COLR", {"envelope": 0, "base-color": [0.88999772071838379, 0.83778131008148193, 0.7476157546043396]}], ["DIFF", {"intensity": 1.0, "envelope": 0}], ["SPEC", {"intensity": 0.0, "envelope": 0}], ["SMAN", 1.5620696544647217]]}],
+          ["SURF", {"source": "", "name": "fleche bout", "attributes": [["COLR", {"envelope": 0, "base-color": [0.90998703241348267, 0.86871135234832764, 0.29121842980384827]}], ["DIFF", {"intensity": 1.0, "envelope": 0}], ["SPEC", {"intensity": 0.0, "envelope": 0}], ["SMAN", 1.5620696544647217], ["SIDE", 3]]}],
+          ["SURF", {"source": "", "name": "fleche bout-2", "attributes": [["COLR", {"envelope": 0, "base-color": [0.19111925363540649, 0.20320439338684082, 0.90998703241348267]}], ["DIFF", {"intensity": 1.0, "envelope": 0}], ["SPEC", {"intensity": 0.0, "envelope": 0}], ["SMAN", 1.5620696544647217], ["SIDE", 3]]}],
+          ["SURF", {"source": "", "name": "gance", "attributes": [["COLR", {"envelope": 0, "base-color": [0.33998626470565796, 0.19673456251621246, 0.071396961808204651]}], ["DIFF", {"intensity": 1.0, "envelope": 0}], ["SPEC", {"intensity": 0.0, "envelope": 0}], ["SMAN", 1.5620696544647217]]}],
+          ["SURF", {"source": "", "name": "latex", "attributes": [["COLR", {"envelope": 0, "base-color": [0.63999390602111816, 0.60927748680114746, 0.56319522857666016]}], ["DIFF", {"intensity": 1.0, "envelope": 0}], ["SPEC", {"intensity": 0.0, "envelope": 0}], ["SMAN", 1.5620696544647217]]}],
+          ["SURF", {"source": "", "name": "linge", "attributes": [["COLR", {"envelope": 0, "base-color": [0.31981384754180908, 0.77999544143676758, 0.68023192882537842]}], ["DIFF", {"intensity": 1.0, "envelope": 0}], ["SPEC", {"intensity": 0.0, "envelope": 0}], ["SMAN", 1.5620696544647217], ["SIDE", 3]]}],
+          ["SURF", {"source": "", "name": "metal", "attributes": [["COLR", {"envelope": 0, "base-color": [0.64998853206634521, 0.64998853206634521, 0.64998853206634521]}], ["DIFF", {"intensity": 1.0, "envelope": 0}], ["SPEC", {"intensity": 0.0, "envelope": 0}], ["SMAN", 1.5620696544647217]]}],
+          ["SURF", {"source": "", "name": "metal doree", "attributes": [["COLR", {"envelope": 0, "base-color": [0.63999390602111816, 0.57920193672180176, 0.51841002702713013]}], ["DIFF", {"intensity": 1.0, "envelope": 0}], ["SPEC", {"intensity": 0.0, "envelope": 0}], ["SMAN", 1.5620696544647217], ["SIDE", 3]]}],
+          ["SURF", {"source": "", "name": "sac", "attributes": [["COLR", {"envelope": 0, "base-color": [0.60999464988708496, 0.53313493728637695, 0.43920043110847473]}], ["DIFF", {"intensity": 1.0, "envelope": 0}], ["SPEC", {"intensity": 0.0, "envelope": 0}], ["SMAN", 1.5620696544647217], ["SIDE", 3]]}],
+          ["SURF", {"source": "", "name": "soulier spawn", "attributes": [["COLR", {"envelope": 0, "base-color": [0.92120242118835449, 0.93998628854751587, 0.92590218782424927]}], ["DIFF", {"intensity": 1.0, "envelope": 0}], ["SPEC", {"intensity": 0.0, "envelope": 0}], ["SMAN", 1.5620696544647217]]}],
+          ["SURF", {"source": "", "name": "yeu", "attributes": [["COLR", {"envelope": 0, "base-color": [0.97999542951583862, 0.97999542951583862, 0.97999542951583862]}], ["DIFF", {"intensity": 1.0, "envelope": 0}], ["SPEC", {"intensity": 0.0, "envelope": 0}], ["SMAN", 1.5620696544647217]]}]]
+     }]]
