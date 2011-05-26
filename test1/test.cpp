@@ -4,6 +4,13 @@
 
 void display()
 {
+  glClear(GL_COLOR_BUFFER_BIT);
+  glColor3f(0.5, 1.0, 0.2);
+  glBegin(GL_LINES);
+  glVertex2f(0, 0);
+  glVertex2f(100, 100);
+  glEnd();
+  glFlush();
 }
 
 void reshape(int w, int h)
