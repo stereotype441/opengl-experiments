@@ -1,6 +1,8 @@
+# TODO: dependencies
+
 TARGET = test
 LIBS = -lglut -lGLU -lGL -lXmu -lXext -lXi -lX11 -lm
-SRCS = test.cpp
+SRCS = test.cpp generated.cpp
 
 default: $(TARGET)
 
@@ -8,11 +10,14 @@ default: $(TARGET)
 
 all: default
 
+generated.h generated.cpp: code_gen.py
+	python code_gen.py
+
 .o:
 	$(CXX) -c $<
 
 $(TARGET): $(SRCS:.cpp=.o)
-	$(CXX) $< -Wall $(LIBS) -o $@
+	$(CXX) $^ -Wall $(LIBS) -o $@
 
 clean:
-	rm -f $.o $(TARGET)
+	rm -f $.o $(TARGET) generated.*
