@@ -22,12 +22,16 @@ float colors[6][3] = {
 
 void display()
 {
-  glClear(GL_COLOR_BUFFER_BIT);
+  glEnable(GL_DEPTH_TEST);
+
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   //  glColor3f(0.5, 1.0, 0.2);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   glRotatef(rotation, 0.0, 1.0, 0.0);
+  float scale_amount = 1.8;
+  glScalef(scale_amount, scale_amount, scale_amount);
 
   for (int i = 0; i < layer_0_pols_PTCH_size; ++i) {
     glColor3fv(colors[i % 6]);
@@ -76,8 +80,8 @@ void special(int key, int x, int y)
 int main(int argc, char **argv)
 {
   glutInit(&argc, argv);
-  glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE); // TODO: try double-buffering
-  glutInitWindowSize(500, 500);
+  glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE | GLUT_DEPTH); // TODO: try double-buffering
+  glutInitWindowSize(800, 800);
   glutInitWindowPosition(0, 0);
   int window = glutCreateWindow(argv[0]);
   glutDisplayFunc(display);
