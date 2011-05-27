@@ -13,6 +13,8 @@ all: default
 generated.h generated.cpp: code_gen.py
 	python code_gen.py
 
+test.cpp: generated.h
+
 .o:
 	$(CXX) -c $<
 

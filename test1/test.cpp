@@ -11,21 +11,32 @@ using namespace std;
 
 int rotation = 0;
 
+float colors[6][3] = {
+  { 0, 0, 1 },
+  { 0, 1, 0 },
+  { 0, 1, 1 },
+  { 1, 0, 0 },
+  { 1, 0, 1 },
+  { 1, 1, 0 },
+};
+
 void display()
 {
   glClear(GL_COLOR_BUFFER_BIT);
-  glColor3f(0.5, 1.0, 0.2);
+  //  glColor3f(0.5, 1.0, 0.2);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   glRotatef(rotation, 0.0, 1.0, 0.0);
 
-  glBegin(GL_POINTS);
-  for (int i = 0; i < num_points_in_layer_0; ++i) {
-    glVertex3f(layer_0_points[i][0], layer_0_points[i][1],
-	       layer_0_points[i][2]);
+  for (int i = 0; i < layer_0_pols_PTCH_size; ++i) {
+    glColor3fv(colors[i % 6]);
+    glBegin(GL_POLYGON);
+    for (int j = 0; j < layer_0_pols_PTCH_sizes[i]; ++j) {
+      glVertex3fv(layer_0_points[layer_0_pols_PTCH[i][j]]);
+    }
+    glEnd();
   }
-  glEnd();
   glFlush();
 }
 
