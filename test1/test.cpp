@@ -11,14 +11,35 @@ using namespace std;
 
 int rotation = 0;
 
-float colors[6][3] = {
-  { 0, 0, 1 },
-  { 0, 1, 0 },
-  { 0, 1, 1 },
-  { 1, 0, 0 },
-  { 1, 0, 1 },
-  { 1, 1, 0 },
+float colors[25][3] = {
+  { 0.0, 0.0, 0.5 },
+  { 0.0, 0.0, 1.0 },
+  { 0.0, 0.5, 0.0 },
+  { 0.0, 0.5, 0.5 },
+  { 0.0, 0.5, 1.0 },
+  { 0.0, 1.0, 0.0 },
+  { 0.0, 1.0, 0.5 },
+  { 0.0, 1.0, 1.0 },
+  { 0.5, 0.0, 0.0 },
+  { 0.5, 0.0, 0.5 },
+  { 0.5, 0.0, 1.0 },
+  { 0.5, 0.5, 0.0 },
+  { 0.5, 0.5, 0.5 },
+  { 0.5, 0.5, 1.0 },
+  { 0.5, 1.0, 0.0 },
+  { 0.5, 1.0, 0.5 },
+  { 0.5, 1.0, 1.0 },
+  { 1.0, 0.0, 0.0 },
+  { 1.0, 0.0, 0.5 },
+  { 1.0, 0.0, 1.0 },
+  { 1.0, 0.5, 0.0 },
+  { 1.0, 0.5, 0.5 },
+  { 1.0, 0.5, 1.0 },
+  { 1.0, 1.0, 0.0 },
+  { 1.0, 1.0, 0.5 },
 };
+
+bool show_polys = true;
 
 void display()
 {
@@ -33,13 +54,24 @@ void display()
   float scale_amount = 1.8;
   glScalef(scale_amount, scale_amount, scale_amount);
 
-  for (int i = 0; i < layer_0_pols_PTCH_size; ++i) {
-    glColor3fv(colors[i % 6]);
-    glBegin(GL_POLYGON);
-    for (int j = 0; j < layer_0_pols_PTCH_sizes[i]; ++j) {
-      glVertex3fv(layer_0_points[layer_0_pols_PTCH[i][j]]);
+  if (show_polys) {
+    for (int i = 0; i < layer_0_pols_PTCH_size; ++i) {
+      glColor3fv(colors[i % 25]);
+      glBegin(GL_POLYGON);
+      for (int j = 0; j < layer_0_pols_PTCH_sizes[i]; ++j) {
+	glVertex3fv(layer_0_points[layer_0_pols_PTCH[i][j]]);
+      }
+      glEnd();
     }
-    glEnd();
+  } else {
+    for (int i = 0; i < layer_0_tris_PTCH_size; ++i) {
+      glColor3fv(colors[i % 25]);
+      glBegin(GL_POLYGON);
+      for (int j = 0; j < 3; ++j) {
+	glVertex3fv(layer_0_points[layer_0_tris_PTCH[i][j]]);
+      }
+      glEnd();
+    }
   }
   glFlush();
 }
@@ -55,10 +87,14 @@ void keyboard(unsigned char key, int x, int y)
   case 0x1b: // ESC
     exit(0);
     break;
+  case 'p':
+    show_polys = !show_polys;
+    break;
   default:
     cout << "key " << (int) key << endl;
     break;
   }
+  display();
 }
 
 void special(int key, int x, int y)

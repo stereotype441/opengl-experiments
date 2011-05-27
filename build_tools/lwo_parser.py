@@ -236,6 +236,10 @@ LWO_BLOK_PARSERS['IKEY'] = parse_ikey
 def parse_lwo(s):
     return tuple(iter_chunks(StringWalker(s), LWO_SUB_PARSERS))
 
+def pols_data_to_polygons(data):
+    data = data['polygons']
+    return tuple(x[1] for x in data)
+
 def pretty_print_key_value_pair(key, value, prefix = ''):
     if isinstance(value, dict):
         print '{0}{1}:'.format(prefix, key)
