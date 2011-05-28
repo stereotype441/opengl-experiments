@@ -1,4 +1,6 @@
+#define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
+#include <GL/glext.h>
 #include <GL/glu.h>
 #include <GL/glut.h>
 
@@ -6,6 +8,7 @@
 #include <iostream>
 
 #include "generated.h"
+#include "vertex.glsl.g.h"
 
 using namespace std;
 
@@ -40,6 +43,47 @@ float colors[25][3] = {
 };
 
 bool show_polys = true;
+
+void check_program_info_log(GLuint program, GLenum pname)
+{
+  GLint success;
+  glGetProgramiv(program, pname, &success);
+  if (!success) {
+    GLint info_log_length;
+    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &info_log_length);
+    GLchar *msg = new GLchar[info_log_length];
+    glGetProgramInfoLog(program, info_log_length, NULL, msg);
+    cout << "Compile failed: " << msg << endl;
+    delete msg;
+    exit(1);
+  }
+}
+
+void setup_shaders()
+{
+  GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+  glShaderSource(vertex_shader, 1, &shader_vertex, NULL);
+  glCompileShader(vertex_shader);
+  GLint success;
+  glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+  if (!success) {
+    GLint info_log_length;
+    glGetShaderiv(vertex_shader, GL_INFO_LOG_LENGTH, &info_log_length);
+    GLchar *msg = new GLchar[info_log_length];
+    glGetShaderInfoLog(vertex_shader, info_log_length, NULL, msg);
+    cout << "Compile failed: " << msg << endl;
+    delete msg;
+    exit(1);
+  }
+
+  GLuint program = glCreateProgram();
+  glAttachShader(program, vertex_shader);
+  glLinkProgram(program);
+  check_program_info_log(program, GL_LINK_STATUS);
+  glValidateProgram(program);
+  check_program_info_log(program, GL_VALIDATE_STATUS);
+  glUseProgram(program);
+}
 
 void display()
 {
@@ -124,5 +168,6 @@ int main(int argc, char **argv)
   glutReshapeFunc(reshape);
   glutKeyboardFunc(keyboard);
   glutSpecialFunc(special);
+  setup_shaders();
   glutMainLoop();
 }
