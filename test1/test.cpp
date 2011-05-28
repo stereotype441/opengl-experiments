@@ -101,6 +101,7 @@ void display()
   if (show_polys) {
     for (int i = 0; i < layer_0_pols_PTCH_size; ++i) {
       glColor3fv(colors[i % 25]);
+      glNormal3fv(layer_0_normals_PTCH[i]);
       glBegin(GL_POLYGON);
       for (int j = 0; j < layer_0_pols_PTCH_sizes[i]; ++j) {
 	glVertex3fv(layer_0_points[layer_0_pols_PTCH[i][j]]);

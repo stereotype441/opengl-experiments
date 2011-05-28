@@ -20,6 +20,9 @@ def cross_product(a, b):
 def vector_subtract(a, b):
     return (a[0] - b[0], a[1] - b[1], a[2] - b[2])
 
+def vector_add(a, b):
+    return (a[0] + b[0], a[1] + b[1], a[2] + b[2])
+
 def scalar_vector_multiply(x, a):
     return (x*a[0], x*a[1], x*a[2])
 
@@ -41,6 +44,17 @@ def remove_polygon_degeneracy(vertices, polygon_indices):
         result.append(polygon_indices[i])
     return tuple(result)
 
+def compute_polygon_partial_normals(vertices, polygon_indices):
+    n = len(polygon_indices)
+    polygon_vertices = tuple(vertices[i] for i in polygon_indices)
+    wrapped_polygon_vertices = polygon_vertices * 2
+    for i in xrange(n):
+        a = vector_subtract(
+            wrapped_polygon_vertices[i+1], wrapped_polygon_vertices[i])
+        b = vector_subtract(
+            wrapped_polygon_vertices[i+2], wrapped_polygon_vertices[i+1])
+        yield cross_product(a, b)
+
 def check_polygon(vertices, polygon_indices):
     polygon_indices = remove_polygon_degeneracy(vertices, polygon_indices)
     n = len(polygon_indices)
@@ -49,17 +63,9 @@ def check_polygon(vertices, polygon_indices):
     if n < 2:
         raise Exception("Polygon is a point")
     polygon_indices = tuple(polygon_indices)
-    polygon_vertices = tuple(vertices[i] for i in polygon_indices)
-    wrapped_polygon_vertices = polygon_vertices * 2
 
     # First check that the polygon is flat and convex.
-    normals = []
-    for i in xrange(n):
-        a = vector_subtract(
-            wrapped_polygon_vertices[i+1], wrapped_polygon_vertices[i])
-        b = vector_subtract(
-            wrapped_polygon_vertices[i+2], wrapped_polygon_vertices[i+1])
-        normals.append(cross_product(a, b))
+    normals = tuple(compute_polygon_partial_normals(vertices, polygon_indices))
     largest_normal = normals[
         max((norm_sq(normals[i]), i) for i in xrange(n))[1]]
     largest_normal_len = norm(largest_normal)
@@ -104,3 +110,20 @@ def polygons_to_triangles(vertices, polygons):
     for polygon_indices in polygons:
         for triangle in polygon_to_triangles(vertices, polygon_indices):
             yield triangle
+
+def compute_polygon_normal(vertices, polygon_indices):
+    polygon_indices = remove_polygon_degeneracy(vertices, polygon_indices)
+    n = len(polygon_indices)
+    if n == 2:
+        # Special case: line.  Just make the normal go along the line.
+        return normalize(
+            vector_subtract(
+                vertices[polygon_indices[1]], vertices[polygon_indices[0]]))
+    total_normal = (0.0, 0.0, 0.0)
+    for normal in compute_polygon_partial_normals(vertices, polygon_indices):
+        total_normal = vector_add(total_normal, normal)
+    return normalize(total_normal)
+
+def compute_polygon_normals(vertices, polygons):
+    for polygon_indices in polygons:
+        yield compute_polygon_normal(vertices, polygon_indices)

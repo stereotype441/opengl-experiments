@@ -62,6 +62,19 @@ def output_triangles(layer, typ, tris, header, cpp):
         cpp.append("    {{ {0} }},".format(', '.join(str(p) for p in tri)))
     cpp.append("};")
 
+def output_normals(layer, typ, normals, header, cpp):
+    normals_array_name = 'layer_{0}_normals_{1}'.format(layer, typ)
+    normals = tuple(normals)
+    num_normals = len(normals)
+    header.append(
+        "const int {0}_size = {1};".format(normals_array_name, num_normals))
+    header.append(
+        "extern float {0}[{1}][3];".format(normals_array_name, num_normals))
+    cpp.append("float {0}[{1}][3] = {{".format(normals_array_name, num_normals))
+    for normal in normals:
+        cpp.append("    {{ {0} }},".format(', '.join(str(p) for p in normal)))
+    cpp.append("};")
+
 header = []
 cpp = ['#include "generated.h"']
 pnts = None
@@ -81,6 +94,9 @@ for typ, detail in model[0][1]['data']:
                 layer, detail['type'],
                 math_3d.polygons_to_triangles(pnts, polygons), header, cpp)
         output_pols(layer, detail['type'], detail['polygons'], header, cpp)
+        output_normals(
+            layer, detail['type'],
+            math_3d.compute_polygon_normals(pnts, polygons), header, cpp)
 
 with open('generated.h', 'w') as f:
     f.write('\n'.join(header))
