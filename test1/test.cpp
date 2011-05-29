@@ -139,10 +139,9 @@ void display()
 		     layer_0_pols_PTCH[i]);
     }
   } else {
-    for (int i = 0; i < layer_0_tris_PTCH_size; ++i) {
-      // glColor3fv(colors[i % 25]);
-      glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, layer_0_tris_PTCH[i]);
-    }
+    // glColor3fv(colors[i % 25]);
+    glDrawElements(GL_TRIANGLES, 3*layer_0_tris_PTCH_size, GL_UNSIGNED_INT,
+		   layer_0_tris_PTCH);
   }
   glFlush();
 }
