@@ -46,8 +46,6 @@ float colors[25][3] = {
   { 1.0, 1.0, 0.5 },
 };
 
-bool show_polys = true;
-
 void check_program_info_log(GLuint program, GLenum pname)
 {
   GLint success;
@@ -131,18 +129,9 @@ void display()
   float scale_amount = 1.8;
   glScalef(scale_amount, scale_amount, scale_amount);
 
-  if (show_polys) {
-    for (int i = 0; i < layer_0_pols_PTCH_size; ++i) {
-      // glColor3fv(colors[i % 25]);
-      // glNormal3fv(layer_0_normals_PTCH[i]);
-      glDrawElements(GL_POLYGON, layer_0_pols_PTCH_sizes[i], GL_UNSIGNED_INT,
-		     layer_0_pols_PTCH[i]);
-    }
-  } else {
-    // glColor3fv(colors[i % 25]);
-    glDrawElements(GL_TRIANGLES, 3*layer_0_tris_PTCH_size, GL_UNSIGNED_INT,
-		   layer_0_tris_PTCH);
-  }
+  // glColor3fv(colors[i % 25]);
+  glDrawElements(GL_TRIANGLES, 3*layer_0_tris_PTCH_size, GL_UNSIGNED_INT,
+		 layer_0_tris_PTCH);
   glFlush();
 }
 
@@ -156,9 +145,6 @@ void keyboard(unsigned char key, int x, int y)
   case 0x03: // Ctrl-C
   case 0x1b: // ESC
     exit(0);
-    break;
-  case 'p':
-    show_polys = !show_polys;
     break;
   default:
     cout << "key " << (int) key << endl;
