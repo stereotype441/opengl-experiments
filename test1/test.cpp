@@ -107,10 +107,12 @@ void setup_shaders()
   glEnableClientState(GL_VERTEX_ARRAY);
 
   // Set up triangle inputs
+  /*
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[1]);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
 	       layer_0_tris_PTCH_size * 3 * sizeof(int), layer_0_tris_PTCH,
 	       GL_STATIC_DRAW);
+  */
 
   // Get ready to use the program
   glUseProgram(program);
@@ -133,20 +135,13 @@ void display()
     for (int i = 0; i < layer_0_pols_PTCH_size; ++i) {
       // glColor3fv(colors[i % 25]);
       // glNormal3fv(layer_0_normals_PTCH[i]);
-      glBegin(GL_POLYGON);
-      for (int j = 0; j < layer_0_pols_PTCH_sizes[i]; ++j) {
-	glArrayElement(layer_0_pols_PTCH[i][j]);
-      }
-      glEnd();
+      glDrawElements(GL_POLYGON, layer_0_pols_PTCH_sizes[i], GL_UNSIGNED_INT,
+		     layer_0_pols_PTCH[i]);
     }
   } else {
     for (int i = 0; i < layer_0_tris_PTCH_size; ++i) {
       // glColor3fv(colors[i % 25]);
-      glBegin(GL_POLYGON);
-      for (int j = 0; j < 3; ++j) {
-	glArrayElement(layer_0_tris_PTCH[i][j]);
-      }
-      glEnd();
+      glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, layer_0_tris_PTCH[i]);
     }
   }
   glFlush();
