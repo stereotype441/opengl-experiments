@@ -144,6 +144,11 @@ void keyboard(unsigned char key, int x, int y)
   case 0x1b: // ESC
     exit(0);
     break;
+  case 'f':
+    while (true) {
+      rotation += 1;
+      display();
+    }
   default:
     cout << "key " << (int) key << endl;
     break;
@@ -179,9 +184,5 @@ int main(int argc, char **argv)
   glutKeyboardFunc(keyboard);
   glutSpecialFunc(special);
   setup_shaders();
-  while (true) {
-    rotation += 1;
-    display();
-  }
   glutMainLoop();
 }
