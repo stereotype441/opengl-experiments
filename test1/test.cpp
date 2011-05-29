@@ -88,6 +88,31 @@ void setup_shaders()
   check_program_info_log(program, GL_LINK_STATUS);
   glValidateProgram(program);
   check_program_info_log(program, GL_VALIDATE_STATUS);
+
+  // Make buffers for inputs
+  GLuint buffers[2];
+  glGenBuffers(2, buffers);	// Allocate GLU buffers
+
+  // Set up vertex inputs
+  glBindBuffer(GL_ARRAY_BUFFER, buffers[0]); // Make GL_ARRAY_BUFFER point to buffers[0]
+  glBufferData(GL_ARRAY_BUFFER, num_points_in_layer_0 * 3 * sizeof(float),
+	       layer_0_points, GL_STATIC_DRAW
+	       ); // Copy data into what GL_ARRAY_BUFFER points to
+  glVertexPointer(3, // Num components in each vector
+		  GL_FLOAT, // Data type of each vector component
+		  0, // Stride, or 0 if packed
+		  0 // pointer (within GL_ARRAY_BUFFER I presume?)
+		  );
+  glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind for safety
+  glEnableClientState(GL_VERTEX_ARRAY);
+
+  // Set up triangle inputs
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[1]);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+	       layer_0_tris_PTCH_size * 3 * sizeof(int), layer_0_tris_PTCH,
+	       GL_STATIC_DRAW);
+
+  // Get ready to use the program
   glUseProgram(program);
 }
 
@@ -110,7 +135,7 @@ void display()
       glNormal3fv(layer_0_normals_PTCH[i]);
       glBegin(GL_POLYGON);
       for (int j = 0; j < layer_0_pols_PTCH_sizes[i]; ++j) {
-	glVertex3fv(layer_0_points[layer_0_pols_PTCH[i][j]]);
+	glArrayElement(layer_0_pols_PTCH[i][j]);
       }
       glEnd();
     }
@@ -119,7 +144,7 @@ void display()
       glColor3fv(colors[i % 25]);
       glBegin(GL_POLYGON);
       for (int j = 0; j < 3; ++j) {
-	glVertex3fv(layer_0_points[layer_0_tris_PTCH[i][j]]);
+	glArrayElement(layer_0_tris_PTCH[i][j]);
       }
       glEnd();
     }
