@@ -14,16 +14,16 @@ all: default
 generated.h generated.cpp: code_gen.py
 	python code_gen.py
 
-%.glsl.g.cpp %.glsl.g.h: %.glsl
-	python ../build_tools/shader_to_cpp.py $<
+%.glsl-o: %.glsl
+	ld -s -r -o $@ -b binary $<
 
-test.cpp: generated.h vertex.glsl.g.h
+test.cpp: generated.h
 
 %.o: %.cpp
 	$(CXX) -g -c $<
 
-$(TARGET): $(SRCS:.cpp=.o) $(GLSL_SRCS:.glsl=.glsl.g.o)
+$(TARGET): $(SRCS:.cpp=.o) $(GLSL_SRCS:.glsl=.glsl-o)
 	$(CXX) -g $^ -Wall $(LIBS) -o $@
 
 clean:
-	rm -f *.o $(TARGET) generated.* *.glsl.g.*
+	rm -f *.o $(TARGET) generated.*

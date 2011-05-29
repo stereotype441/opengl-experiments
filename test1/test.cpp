@@ -8,7 +8,11 @@
 #include <iostream>
 
 #include "generated.h"
-#include "vertex.glsl.g.h"
+
+extern "C" {
+  extern char _binary_vertex_glsl_start;
+  extern char _binary_vertex_glsl_end;
+}
 
 using namespace std;
 
@@ -62,7 +66,9 @@ void check_program_info_log(GLuint program, GLenum pname)
 void setup_shaders()
 {
   GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertex_shader, 1, &shader_vertex, NULL);
+  GLchar const *strings[1] = { &_binary_vertex_glsl_start };
+  GLint lengths[1] = { &_binary_vertex_glsl_end - &_binary_vertex_glsl_start };
+  glShaderSource(vertex_shader, 1, strings, lengths);
   glCompileShader(vertex_shader);
   GLint success;
   glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
