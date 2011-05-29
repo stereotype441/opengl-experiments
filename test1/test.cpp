@@ -104,13 +104,12 @@ void setup_shaders()
   glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind for safety
   glEnableClientState(GL_VERTEX_ARRAY);
 
-  // Set up triangle inputs
-  /*
+  // Set up triangle inputs.  This will be used for future invocations
+  // of glDrawElements().
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[1]);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER,
 	       layer_0_tris_PTCH_size * 3 * sizeof(int), layer_0_tris_PTCH,
 	       GL_STATIC_DRAW);
-  */
 
   // Get ready to use the program
   glUseProgram(program);
@@ -130,8 +129,7 @@ void display()
   glScalef(scale_amount, scale_amount, scale_amount);
 
   // glColor3fv(colors[i % 25]);
-  glDrawElements(GL_TRIANGLES, 3*layer_0_tris_PTCH_size, GL_UNSIGNED_INT,
-		 layer_0_tris_PTCH);
+  glDrawElements(GL_TRIANGLES, 3*layer_0_tris_PTCH_size, GL_UNSIGNED_INT, 0);
   glFlush();
 }
 
