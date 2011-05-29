@@ -130,7 +130,7 @@ void display()
 
   // glColor3fv(colors[i % 25]);
   glDrawElements(GL_TRIANGLES, 3*layer_0_tris_PTCH_size, GL_UNSIGNED_INT, 0);
-  glFlush();
+  glutSwapBuffers();
 }
 
 void reshape(int w, int h)
@@ -175,7 +175,7 @@ void special(int key, int x, int y)
 int main(int argc, char **argv)
 {
   glutInit(&argc, argv);
-  glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE | GLUT_DEPTH); // TODO: try double-buffering
+  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH); // TODO: try double-buffering
   glutInitWindowSize(800, 800);
   glutInitWindowPosition(0, 0);
   int window = glutCreateWindow(argv[0]);
