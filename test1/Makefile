@@ -26,4 +26,4 @@ $(TARGET): $(SRCS:.cpp=.o) $(GLSL_SRCS:.glsl=.glsl-o)
 	$(CXX) -g $^ -Wall $(LIBS) -o $@
 
 clean:
-	rm -f *.o $(TARGET) generated.*
+	rm -f *.o *.glsl-o $(TARGET) generated.*
