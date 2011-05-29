@@ -179,5 +179,9 @@ int main(int argc, char **argv)
   glutKeyboardFunc(keyboard);
   glutSpecialFunc(special);
   setup_shaders();
+  while (true) {
+    rotation += 1;
+    display();
+  }
   glutMainLoop();
 }
