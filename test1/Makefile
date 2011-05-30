@@ -17,9 +17,9 @@ all: default
 elfegab.lwo-o: ../models/elfegab.lwo
 	ld -s -r -o $@ -b binary $<
 
-test.cpp: mesh.h lwo_parser.h vectors.h
-mesh.cpp: mesh.h
-lwo_parser.cpp: vectors.h lwo_parser.h
+test.o: mesh.h lwo_parser.h vectors.h
+mesh.o: mesh.h
+lwo_parser.o: vectors.h lwo_parser.h
 
 %.o: %.cpp
 	$(CXX) -g -c $<
