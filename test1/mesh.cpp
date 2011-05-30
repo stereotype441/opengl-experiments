@@ -30,9 +30,13 @@ void mesh_to_triangles(Mesh const &mesh, V3List &triangles)
 
 void compute_mesh_normals(Mesh const &mesh, std::map<V3 const *, V3> &normals)
 {
+  std::map<Polygon const *, int> orientations;
+  assign_polygon_orientations(mesh, orientations);
+
   // For each polygon:
   for (int i = 0; i < mesh.size(); ++i) {
     Polygon const *polygon = mesh[i];
+    int orientation = orientations[polygon];
     // For each point within that polygon:
     for (int j = 0; j < polygon->size(); ++j) {
       V3 const *point = (*polygon)[j];
@@ -44,6 +48,9 @@ void compute_mesh_normals(Mesh const &mesh, std::map<V3 const *, V3> &normals)
       V3 incoming = *point - *prev_point;
       V3 outgoing = *next_point - *point;
       V3 normal = incoming % outgoing;
+
+      // Adjust based on the orientation of this polygon
+      normal *= orientation;
 
       // And sum into the "normals" map.
       normals[point] += normal;
@@ -89,6 +96,7 @@ void split_mesh_edgewise(Mesh const &mesh, std::vector<Mesh> &surfaces)
 	  Polygon const *y = polygons[j];
 	  if (x != y) {
 	    adjacency[x].push_back(y);
+	    adjacency[y].push_back(x);
 	  }
 	}
       }
@@ -110,10 +118,10 @@ void split_mesh_edgewise(Mesh const &mesh, std::vector<Mesh> &surfaces)
     Polygon const *poly = *unassigned_polygons.begin();
     unassigned_polygons.erase(unassigned_polygons.begin());
     surface.push_back(poly);
-    std::vector<Polygon const *> polys_to_traverse;
-    polys_to_traverse.push_back(poly);
 
     // And then "flood fill" to all other polygons that share edges.
+    std::vector<Polygon const *> polys_to_traverse;
+    polys_to_traverse.push_back(poly);
     while (!polys_to_traverse.empty()) {
       Polygon const *poly = polys_to_traverse.back();
       polys_to_traverse.pop_back();
@@ -160,10 +168,10 @@ void split_mesh_pointwise(Mesh const &mesh, std::vector<Mesh> &surfaces)
     Polygon const *poly = *unassigned_polygons.begin();
     unassigned_polygons.erase(unassigned_polygons.begin());
     surface.push_back(poly);
+
+    // And then "flood fill" to all other polygons that share points.
     std::vector<Polygon const *> polys_to_traverse;
     polys_to_traverse.push_back(poly);
-
-    // And then "flood fill" to all other polygons that share edges.
     while (!polys_to_traverse.empty()) {
       Polygon const *poly = polys_to_traverse.back();
       polys_to_traverse.pop_back();
@@ -194,6 +202,98 @@ void compute_surface_indices(
       Polygon const *poly = mesh[j];
       for (int k = 0; k < poly->size(); ++k) {
 	indices[(*poly)[k]] = i;
+      }
+    }
+  }
+}
+
+void assign_polygon_orientations(
+    Mesh const &mesh, std::map<Polygon const *, int> &orientations)
+{
+  // First construct a map from each edge to a list of pairs, where
+  // the pairs consist of (polygon containing that edge,
+  // orientation of that edge).  An edge is defined as a sorted pair
+  // of V3 pointers.  An orientation is 1 if the sorted pair of V3
+  // pointers is in the same order it appears in the polygon, -1 if
+  // it's in the opposite order.
+  typedef std::pair<V3 const *, V3 const *> Edge;
+  typedef std::pair<Polygon const *, int> EdgeData;
+  std::map<Edge, std::vector<EdgeData> > edge_data_map;
+  for (int i = 0; i < mesh.size(); ++i) {
+    Polygon const *poly = mesh[i];
+    for (int j = 0; j < poly->size(); ++j) {
+      V3 const *a = (*poly)[j];
+      V3 const *b = (*poly)[(j+1) % poly->size()];
+      if (a < b) {
+	edge_data_map[std::make_pair(a, b)].push_back(make_pair(poly, 1));
+      } else {
+	edge_data_map[std::make_pair(b, a)].push_back(make_pair(poly, -1));
+      }
+    }
+  }
+
+  // Now construct a map from each polygon to a list of pairs, where
+  // the pairs consist of (adjoining polygon, orientation of the
+  // join).  The orientation of a join is 1 if the common edge is
+  // contained in the two polygons in opposite orientation, -1 if it
+  // is contained in the two polygons in the same orientation.
+  typedef std::pair<Polygon const *, int> AdjacencyData;
+  std::map<Polygon const *, std::vector<AdjacencyData> > adjacency;
+  for (std::map<Edge, std::vector<EdgeData> >::const_iterator iter
+	 = edge_data_map.begin(); iter != edge_data_map.end(); ++iter) {
+    std::vector<EdgeData> const &edge_data = iter->second;
+    for (int i = 0; i < edge_data.size(); ++i) {
+      for (int j = 0; j < edge_data.size(); ++j) {
+	if (i != j) {
+	  Polygon const *x = edge_data[i].first;
+	  Polygon const *y = edge_data[j].first;
+	  if (x != y) {
+	    int x_orientation = edge_data[i].second;
+	    int y_orientation = edge_data[j].second;
+	    int join_orientation = -1 * x_orientation * y_orientation;
+	    adjacency[x].push_back(make_pair(y, join_orientation));
+	    adjacency[y].push_back(make_pair(x, join_orientation));
+	  }
+	}
+      }
+    }
+  }
+
+  // Make a set to hold the pointers to polygons that have not yet
+  // been assigned an orientation.
+  std::set<Polygon const *> unassigned_polygons;
+  for (int i = 0; i < mesh.size(); ++i) {
+    unassigned_polygons.insert(mesh[i]);
+  }
+
+  // While there are unassigned polygons left:
+  while (!unassigned_polygons.empty()) {
+    // Choose a polygon and assign an orientation arbitrarily.
+    Polygon const *poly = *unassigned_polygons.begin();
+    unassigned_polygons.erase(unassigned_polygons.begin());
+    orientations[poly] = 1;
+
+    // And then "flood fill" to all other polygons that share edges.
+    std::vector<Polygon const *> polys_to_traverse;
+    polys_to_traverse.push_back(poly);
+    while (!polys_to_traverse.empty()) {
+      Polygon const *poly = polys_to_traverse.back();
+      polys_to_traverse.pop_back();
+      std::vector<AdjacencyData> const &adjacency_data = adjacency[poly];
+      for (int i = 0; i < adjacency_data.size(); ++i) {
+	Polygon const *adjacent_polygon = adjacency_data[i].first;
+	int join_orientation = adjacency_data[i].second;
+	std::set<Polygon const *>::iterator found
+	  = unassigned_polygons.find(adjacent_polygon);
+	if (found != unassigned_polygons.end()) {
+	  unassigned_polygons.erase(found);
+	  orientations[adjacent_polygon]
+	    = orientations[poly] * join_orientation;
+	  polys_to_traverse.push_back(adjacent_polygon);
+	} else if (orientations[adjacent_polygon]
+	      != orientations[poly] * join_orientation) {
+	  cout << "Warning: mobius surface" << endl;
+	}
       }
     }
   }

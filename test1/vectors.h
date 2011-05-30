@@ -46,6 +46,13 @@ public:
       coords[i] += b.coords[i];
     return *this;
   }
+
+  Vector<size> const &operator*=(float b)
+  {
+    for (int i = 0; i < size; ++i)
+      coords[i] *= b;
+    return *this;
+  }
 };
 
 // Dot product
@@ -62,10 +69,8 @@ inline float operator*(Vector<size> const &a, Vector<size> const &b)
 template<int size>
 inline Vector<size> operator*(float a, Vector<size> const &b)
 {
-  Vector<size> result;
-  for (int i = 0; i < size; ++i)
-    result[i] = a * b[i];
-  return result;
+  Vector<size> result(b);
+  return result *= a;
 }
 
 // Cross product

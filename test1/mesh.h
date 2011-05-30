@@ -65,4 +65,7 @@ void split_mesh_edgewise(Mesh const &mesh, std::vector<Mesh> &sub_meshes);
 void compute_surface_indices(
     std::vector<Mesh> const &surfaces, std::map<V3 const *, int> &indices);
 
+void assign_polygon_orientations(
+    Mesh const &mesh, std::map<Polygon const *, int> &orientations);
+
 };
