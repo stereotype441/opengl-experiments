@@ -1,3 +1,4 @@
 *.o
 *.glsl-o
 *.lwo-o
+*.P
