@@ -94,14 +94,13 @@ GLuint setup_shaders()
 
 void setup_data(GLuint program)
 {
+  GLuint buffer;
+
   Lwo::Lwo *model = Lwo::parse(&_binary____models_elfegab_lwo_start);
 
-  // Make buffers for inputs
-  GLuint buffers[2];
-  glGenBuffers(2, buffers);	// Allocate GLU buffers
-
   // Set up vertex inputs
-  glBindBuffer(GL_ARRAY_BUFFER, buffers[0]); // Make GL_ARRAY_BUFFER point to buffers[0]
+  glGenBuffers(1, &buffer);	// Allocate GLU buffer
+  glBindBuffer(GL_ARRAY_BUFFER, buffer); // Make GL_ARRAY_BUFFER point to buffer
   glBufferData(GL_ARRAY_BUFFER,
 	       model->layers[0]->points.size() * 3 * sizeof(float),
 	       &model->layers[0]->points[0], GL_STATIC_DRAW
@@ -114,12 +113,26 @@ void setup_data(GLuint program)
   glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind for safety
   glEnableClientState(GL_VERTEX_ARRAY);
 
+  // Set up normal inputs.
+  glGenBuffers(1, &buffer);
+  std::vector<Vector<3> > normals;
+  Mesh::compute_polygon_normals(model->layers[0]->points,
+				model->layers[0]->polygons[1]->polygons,
+				normals);
+  glBindBuffer(GL_ARRAY_BUFFER, buffer);
+  glBufferData(GL_ARRAY_BUFFER, normals.size() * 3 * sizeof(float),
+	       &normals[0], GL_STATIC_DRAW);
+  glNormalPointer(GL_FLOAT, 0, 0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glEnableClientState(GL_NORMAL_ARRAY);
+
   // Set up triangle inputs.  This will be used for future invocations
   // of glDrawElements().
+  glGenBuffers(1, &buffer);
   std::vector<unsigned int> triangles;
   Mesh::polygons_to_triangles(model->layers[0]->polygons[1]->polygons,
 			      triangles);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[1]);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, triangles.size() * sizeof(int),
 	       &triangles[0], GL_STATIC_DRAW);
   num_triangles = triangles.size();

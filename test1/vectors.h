@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cmath>
+
 template<int size>
 class Vector
 {
@@ -30,6 +32,13 @@ public:
   {
     return coords[i];
   }
+
+  Vector<size> const &operator+=(Vector<size> const &b)
+  {
+    for (int i = 0; i < size; ++i)
+      coords[i] += b.coords[i];
+    return *this;
+  }
 };
 
 // Dot product
@@ -44,7 +53,7 @@ inline float operator*(Vector<size> const &a, Vector<size> const &b)
 
 // Scalar/vector product
 template<int size>
-inline float operator*(float a, Vector<size> const &b)
+inline Vector<size> operator*(float a, Vector<size> const &b)
 {
   Vector<size> result;
   for (int i = 0; i < size; ++i)
@@ -65,10 +74,8 @@ inline Vector<3> operator%(Vector<3> const &a, Vector<3> const &b)
 template<int size>
 inline Vector<size> operator+(Vector<size> const &a, Vector<size> const &b)
 {
-  Vector<size> result;
-  for (int i = 0; i < size; ++i)
-    result[i] = a[i] + b[i];
-  return result;
+  Vector<size> result(a);
+  return a += b;
 }
 
 // Vector subtraction
