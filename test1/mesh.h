@@ -7,12 +7,14 @@
 namespace Mesh {
 
 typedef Vector<3> V3;
-typedef std::vector<V3 const *> Polygon;
+typedef std::vector<V3 const *> V3List;
+typedef V3List Polygon;
+typedef std::vector<Polygon> Mesh;
 
 class PointSet
 {
 public:
-  void translate(std::vector<V3 const *> const &in,
+  void translate(V3List const &in,
 		 std::vector<int> &out)
   {
     for (int i = 0; i < in.size(); ++i) {
@@ -46,17 +48,13 @@ public:
   }
 
 private:
-  std::vector<V3 const *> points;
+  V3List points;
   std::vector<V3> deref_points;
   std::map<V3 const *, int> point_to_index;
 };
 
-void polygons_to_triangles(
-    std::vector<Polygon> const &polygons,
-    std::vector<V3 const *> &triangles);
+void mesh_to_triangles(Mesh const &mesh, V3List &triangles);
 
-void compute_polygon_normals(
-    std::vector<Polygon> const &polygons,
-    std::map<V3 const *, V3> &normals);
+void compute_mesh_normals(Mesh const &mesh, std::map<V3 const *, V3> &normals);
 
 };

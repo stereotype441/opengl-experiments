@@ -5,13 +5,11 @@ using namespace std;
 
 namespace Mesh {
 
-void polygons_to_triangles(
-    std::vector<Polygon> const &polygons,
-    std::vector<V3 const *> &triangles)
+void mesh_to_triangles(Mesh const &mesh, V3List &triangles)
 {
   // For each polygon:
-  for (int i = 0; i < polygons.size(); ++i) {
-    Polygon const &polygon = polygons[i];
+  for (int i = 0; i < mesh.size(); ++i) {
+    Polygon const &polygon = mesh[i];
 
     // If the polygon has at least 3 vertices:
     if (polygon.size() < 3) {
@@ -29,13 +27,11 @@ void polygons_to_triangles(
   }
 }
 
-void compute_polygon_normals(
-    std::vector<Polygon> const &polygons,
-    std::map<V3 const *, V3> &normals)
+void compute_mesh_normals(Mesh const &mesh, std::map<V3 const *, V3> &normals)
 {
   // For each polygon:
-  for (int i = 0; i < polygons.size(); ++i) {
-    Polygon const &polygon = polygons[i];
+  for (int i = 0; i < mesh.size(); ++i) {
+    Polygon const &polygon = mesh[i];
     // For each point within that polygon:
     for (int j = 0; j < polygon.size(); ++j) {
       V3 const *point = polygon[j];

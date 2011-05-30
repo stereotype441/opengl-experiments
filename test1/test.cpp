@@ -100,11 +100,11 @@ void setup_data(GLuint program)
 
   // Compute vertex, normal, and triangle vectors.
   std::map<Vector<3> const *, Vector<3> > normals;
-  Mesh::compute_polygon_normals(model->layers[0]->polygons[1]->polygons,
-				normals);
+  Mesh::compute_mesh_normals(model->layers[0]->polygons[1]->polygons,
+			     normals);
   std::vector<Vector<3> const *> triangles;
-  Mesh::polygons_to_triangles(model->layers[0]->polygons[1]->polygons,
-			      triangles);
+  Mesh::mesh_to_triangles(model->layers[0]->polygons[1]->polygons,
+			  triangles);
   Mesh::PointSet points;
   std::vector<int> triangle_indices;
   points.translate(triangles, triangle_indices);
