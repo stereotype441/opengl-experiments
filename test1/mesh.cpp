@@ -10,19 +10,19 @@ void mesh_to_triangles(Mesh const &mesh, V3List &triangles)
 {
   // For each polygon:
   for (int i = 0; i < mesh.size(); ++i) {
-    Polygon const &polygon = mesh[i];
+    Polygon const *polygon = mesh[i];
 
     // If the polygon has at least 3 vertices:
-    if (polygon.size() < 3) {
+    if (polygon->size() < 3) {
       cout << "Warning: polygon with fewer than 3 vertices" << endl;
     } else {
 
       // Then arbitrarily create a triangle fan centered at the first
       // vertex.
-      for (int i = 2; i < polygon.size(); ++i) {
-	triangles.push_back(polygon[0]);
-	triangles.push_back(polygon[i-1]);
-	triangles.push_back(polygon[i]);
+      for (int i = 2; i < polygon->size(); ++i) {
+	triangles.push_back((*polygon)[0]);
+	triangles.push_back((*polygon)[i-1]);
+	triangles.push_back((*polygon)[i]);
       }
     }
   }
@@ -32,15 +32,15 @@ void compute_mesh_normals(Mesh const &mesh, std::map<V3 const *, V3> &normals)
 {
   // For each polygon:
   for (int i = 0; i < mesh.size(); ++i) {
-    Polygon const &polygon = mesh[i];
+    Polygon const *polygon = mesh[i];
     // For each point within that polygon:
-    for (int j = 0; j < polygon.size(); ++j) {
-      V3 const *point = polygon[j];
+    for (int j = 0; j < polygon->size(); ++j) {
+      V3 const *point = (*polygon)[j];
       // Compute the vectors from the previous point to this one, and
       // from this point to the next one.
-      int sz = polygon.size();
-      V3 const *prev_point = polygon[(j + sz - 1) % sz];
-      V3 const *next_point = polygon[(j + 1) % sz];
+      int sz = polygon->size();
+      V3 const *prev_point = (*polygon)[(j + sz - 1) % sz];
+      V3 const *next_point = (*polygon)[(j + 1) % sz];
       V3 incoming = *point - *prev_point;
       V3 outgoing = *next_point - *point;
       V3 normal = incoming % outgoing;
@@ -59,35 +59,34 @@ void compute_mesh_normals(Mesh const &mesh, std::map<V3 const *, V3> &normals)
 
 void split_mesh_edgewise(Mesh const &mesh, std::vector<Mesh> &surfaces)
 {
-  // Make a map from each edge to a list of indices of polygons that
+  // Make a map from each edge to a list of pointers to polygons that
   // touch it.  An edge is defined as a sorted pair of V3 pointers.
   typedef std::pair<V3 const *, V3 const *> Edge;
-  std::map<Edge, std::vector<int> > edge_to_poly_index;
+  std::map<Edge, std::vector<Polygon const *> > edge_to_poly;
   for (int i = 0; i < mesh.size(); ++i) {
-    Polygon const &poly = mesh[i];
-    for (int j = 0; j < poly.size(); ++j) {
-      V3 const *a = poly[j];
-      V3 const *b = poly[(j+1) % poly.size()];
+    Polygon const *poly = mesh[i];
+    for (int j = 0; j < poly->size(); ++j) {
+      V3 const *a = (*poly)[j];
+      V3 const *b = (*poly)[(j+1) % poly->size()];
       if (a < b) {
-	edge_to_poly_index[std::make_pair(a, b)].push_back(i);
+	edge_to_poly[std::make_pair(a, b)].push_back(poly);
       } else {
-	edge_to_poly_index[std::make_pair(b, a)].push_back(i);
+	edge_to_poly[std::make_pair(b, a)].push_back(poly);
       }
     }
   }
 
-  // Make a map from each polygon index to a list of indices of
+  // Make a map from each polygon pointer to a list of pointers to
   // polygons that touch it.
-  std::vector<std::vector<int> > adjacency(mesh.size());
-  for (std::map<Edge, std::vector<int> >::const_iterator iter
-	 = edge_to_poly_index.begin(); iter != edge_to_poly_index.end();
-       ++iter) {
-    std::vector<int> const &polygon_indices = iter->second;
-    for (int i = 0; i < polygon_indices.size(); ++i) {
-      for (int j = 0; j < polygon_indices.size(); ++j) {
+  std::map<Polygon const *, std::vector<Polygon const *> > adjacency;
+  for (std::map<Edge, std::vector<Polygon const *> >::const_iterator iter
+	 = edge_to_poly.begin(); iter != edge_to_poly.end(); ++iter) {
+    std::vector<Polygon const *> const &polygons = iter->second;
+    for (int i = 0; i < polygons.size(); ++i) {
+      for (int j = 0; j < polygons.size(); ++j) {
 	if (i != j) {
-	  int x = polygon_indices[i];
-	  int y = polygon_indices[j];
+	  Polygon const *x = polygons[i];
+	  Polygon const *y = polygons[j];
 	  if (x != y) {
 	    adjacency[x].push_back(y);
 	  }
@@ -96,37 +95,38 @@ void split_mesh_edgewise(Mesh const &mesh, std::vector<Mesh> &surfaces)
     }
   }
 
-  // Make a set to hold the indices of polygons that have not yet been
+  // Make a set to hold the pointers to polygons that have not yet been
   // assigned a surface.
-  std::set<int> unassigned_polygon_indices;
+  std::set<Polygon const *> unassigned_polygons;
   for (int i = 0; i < mesh.size(); ++i) {
-    unassigned_polygon_indices.insert(i);
+    unassigned_polygons.insert(mesh[i]);
   }
 
   // While there are unassigned polygons left:
-  while (!unassigned_polygon_indices.empty()) {
+  while (!unassigned_polygons.empty()) {
     // Create a new surface containing only this polygon.
     surfaces.push_back(Mesh());
     Mesh &surface = surfaces.back();
-    int poly_index = *unassigned_polygon_indices.begin();
-    unassigned_polygon_indices.erase(unassigned_polygon_indices.begin());
-    surface.push_back(mesh[poly_index]);
-    std::vector<int> indices_to_traverse;
-    indices_to_traverse.push_back(poly_index);
+    Polygon const *poly = *unassigned_polygons.begin();
+    unassigned_polygons.erase(unassigned_polygons.begin());
+    surface.push_back(poly);
+    std::vector<Polygon const *> polys_to_traverse;
+    polys_to_traverse.push_back(poly);
 
     // And then "flood fill" to all other polygons that share edges.
-    while (!indices_to_traverse.empty()) {
-      int poly_index = indices_to_traverse.back();
-      indices_to_traverse.pop_back();
-      std::vector<int> const &adjacent_polygon_indices = adjacency[poly_index];
-      for (int i = 0; i < adjacent_polygon_indices.size(); ++i) {
-	int adjacent_polygon_index = adjacent_polygon_indices[i];
-	std::set<int>::iterator found
-	  = unassigned_polygon_indices.find(adjacent_polygon_index);
-	if (found != unassigned_polygon_indices.end()) {
-	  unassigned_polygon_indices.erase(found);
-	  surface.push_back(mesh[adjacent_polygon_index]);
-	  indices_to_traverse.push_back(adjacent_polygon_index);
+    while (!polys_to_traverse.empty()) {
+      Polygon const *poly = polys_to_traverse.back();
+      polys_to_traverse.pop_back();
+      std::vector<Polygon const *> const &adjacent_polygons
+	= adjacency[poly];
+      for (int i = 0; i < adjacent_polygons.size(); ++i) {
+	Polygon const *adjacent_polygon = adjacent_polygons[i];
+	std::set<Polygon const *>::iterator found
+	  = unassigned_polygons.find(adjacent_polygon);
+	if (found != unassigned_polygons.end()) {
+	  unassigned_polygons.erase(found);
+	  surface.push_back(adjacent_polygon);
+	  polys_to_traverse.push_back(adjacent_polygon);
 	}
       }
     }
@@ -135,50 +135,49 @@ void split_mesh_edgewise(Mesh const &mesh, std::vector<Mesh> &surfaces)
 
 void split_mesh_pointwise(Mesh const &mesh, std::vector<Mesh> &surfaces)
 {
-  // Make a map from each point to a list of indices of polygons that
+  // Make a map from each point to a list of pointers to polygons that
   // include it.
-  std::map<V3 const *, std::vector<int> > point_to_poly_index;
+  std::map<V3 const *, std::vector<Polygon const *> > point_to_poly;
   for (int i = 0; i < mesh.size(); ++i) {
-    Polygon const &poly = mesh[i];
-    for (int j = 0; j < poly.size(); ++j) {
-      point_to_poly_index[poly[j]].push_back(i);
+    Polygon const *poly = mesh[i];
+    for (int j = 0; j < poly->size(); ++j) {
+      point_to_poly[(*poly)[j]].push_back(poly);
     }
   }
 
-  // Make a set to hold the indices of polygons that have not yet been
+  // Make a set to hold the pointers to polygons that have not yet been
   // assigned a surface.
-  std::set<int> unassigned_polygon_indices;
+  std::set<Polygon const *> unassigned_polygons;
   for (int i = 0; i < mesh.size(); ++i) {
-    unassigned_polygon_indices.insert(i);
+    unassigned_polygons.insert(mesh[i]);
   }
 
   // While there are unassigned polygons left:
-  while (!unassigned_polygon_indices.empty()) {
+  while (!unassigned_polygons.empty()) {
     // Create a new surface containing only this polygon.
     surfaces.push_back(Mesh());
     Mesh &surface = surfaces.back();
-    int poly_index = *unassigned_polygon_indices.begin();
-    unassigned_polygon_indices.erase(unassigned_polygon_indices.begin());
-    surface.push_back(mesh[poly_index]);
-    std::vector<int> indices_to_traverse;
-    indices_to_traverse.push_back(poly_index);
+    Polygon const *poly = *unassigned_polygons.begin();
+    unassigned_polygons.erase(unassigned_polygons.begin());
+    surface.push_back(poly);
+    std::vector<Polygon const *> polys_to_traverse;
+    polys_to_traverse.push_back(poly);
 
     // And then "flood fill" to all other polygons that share edges.
-    while (!indices_to_traverse.empty()) {
-      int poly_index = indices_to_traverse.back();
-      indices_to_traverse.pop_back();
-      Polygon const &poly = mesh[poly_index];
-      for (int i = 0; i < poly.size(); ++i) {
-	std::vector<int> const &adjacent_poly_indices
-	  = point_to_poly_index[poly[i]];
-	for (int j = 0; j < adjacent_poly_indices.size(); ++j) {
-	  int adjacent_poly_index = adjacent_poly_indices[j];
-	  std::set<int>::iterator found
-	    = unassigned_polygon_indices.find(adjacent_poly_index);
-	  if (found != unassigned_polygon_indices.end()) {
-	    unassigned_polygon_indices.erase(found);
-	    surface.push_back(mesh[adjacent_poly_index]);
-	    indices_to_traverse.push_back(adjacent_poly_index);
+    while (!polys_to_traverse.empty()) {
+      Polygon const *poly = polys_to_traverse.back();
+      polys_to_traverse.pop_back();
+      for (int i = 0; i < poly->size(); ++i) {
+	std::vector<Polygon const *> const &adjacent_polys
+	  = point_to_poly[(*poly)[i]];
+	for (int j = 0; j < adjacent_polys.size(); ++j) {
+	  Polygon const *adjacent_poly = adjacent_polys[j];
+	  std::set<Polygon const *>::iterator found
+	    = unassigned_polygons.find(adjacent_poly);
+	  if (found != unassigned_polygons.end()) {
+	    unassigned_polygons.erase(found);
+	    surface.push_back(adjacent_poly);
+	    polys_to_traverse.push_back(adjacent_poly);
 	  }
 	}
       }
@@ -192,9 +191,9 @@ void compute_surface_indices(
   for (int i = 0; i < surfaces.size(); ++i) {
     Mesh const &mesh = surfaces[i];
     for (int j = 0; j < mesh.size(); ++j) {
-      Polygon const &poly = mesh[j];
-      for (int k = 0; k < poly.size(); ++k) {
-	indices[poly[k]] = i;
+      Polygon const *poly = mesh[j];
+      for (int k = 0; k < poly->size(); ++k) {
+	indices[(*poly)[k]] = i;
       }
     }
   }

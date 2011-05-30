@@ -90,9 +90,9 @@ Pols *handle_pols(FileIterator iter, Mesh::V3List const &points)
     unsigned short num_vertices_and_flags = iter.get_uint(2);
     int num_vertices = num_vertices_and_flags & 0x3ff;
     // TODO: ignoring flags for now.
-    std::vector<Vector<3> const *> vertex_pointers;
+    Mesh::Polygon *vertex_pointers = new Mesh::Polygon();
     for (int i = 0; i < num_vertices; ++i) {
-      vertex_pointers.push_back(points[iter.get_vx()]);
+      vertex_pointers->push_back(points[iter.get_vx()]);
     }
     pols->polygons.push_back(vertex_pointers);
   }

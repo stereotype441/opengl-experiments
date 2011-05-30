@@ -9,7 +9,7 @@ namespace Mesh {
 typedef Vector<3> V3;
 typedef std::vector<V3 const *> V3List;
 typedef V3List Polygon;
-typedef std::vector<Polygon> Mesh;
+typedef std::vector<Polygon const *> Mesh;
 
 class PointSet
 {

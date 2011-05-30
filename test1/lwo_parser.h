@@ -9,7 +9,7 @@ namespace Lwo {
 struct Pols
 {
   std::string type;
-  std::vector<std::vector<Vector<3> const *> > polygons;
+  Mesh::Mesh polygons;
 };
 
 struct Layer
