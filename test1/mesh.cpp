@@ -6,12 +6,12 @@ using namespace std;
 namespace Mesh {
 
 void polygons_to_triangles(
-    std::vector<std::vector<Vector<3> const *> > const &polygons,
-    std::vector<Vector<3> const *> &triangles)
+    std::vector<Polygon> const &polygons,
+    std::vector<V3 const *> &triangles)
 {
   // For each polygon:
   for (int i = 0; i < polygons.size(); ++i) {
-    std::vector<Vector<3> const *> const &polygon = polygons[i];
+    Polygon const &polygon = polygons[i];
 
     // If the polygon has at least 3 vertices:
     if (polygon.size() < 3) {
@@ -30,23 +30,23 @@ void polygons_to_triangles(
 }
 
 void compute_polygon_normals(
-    std::vector<std::vector<Vector<3> const *> > const &polygons,
-    std::map<Vector<3> const *, Vector<3> > &normals)
+    std::vector<Polygon> const &polygons,
+    std::map<V3 const *, V3> &normals)
 {
   // For each polygon:
   for (int i = 0; i < polygons.size(); ++i) {
-    std::vector<Vector<3> const *> const &polygon = polygons[i];
+    Polygon const &polygon = polygons[i];
     // For each point within that polygon:
     for (int j = 0; j < polygon.size(); ++j) {
-      Vector<3> const *point = polygon[j];
+      V3 const *point = polygon[j];
       // Compute the vectors from the previous point to this one, and
       // from this point to the next one.
       int sz = polygon.size();
-      Vector<3> const *prev_point = polygon[(j + sz - 1) % sz];
-      Vector<3> const *next_point = polygon[(j + 1) % sz];
-      Vector<3> incoming = *point - *prev_point;
-      Vector<3> outgoing = *next_point - *point;
-      Vector<3> normal = incoming % outgoing;
+      V3 const *prev_point = polygon[(j + sz - 1) % sz];
+      V3 const *next_point = polygon[(j + 1) % sz];
+      V3 incoming = *point - *prev_point;
+      V3 outgoing = *next_point - *point;
+      V3 normal = incoming % outgoing;
 
       // And sum into the "normals" map.
       normals[point] += normal;
@@ -54,7 +54,7 @@ void compute_polygon_normals(
   }
 
   // Now re-normalize every element of the "normals" map.
-  for (std::map<Vector<3> const *, Vector<3> >::iterator normal_iter
+  for (std::map<V3 const *, V3>::iterator normal_iter
 	 = normals.begin(); normal_iter != normals.end(); ++normal_iter) {
     normal_iter->second = normal_iter->second.normalize();
   }

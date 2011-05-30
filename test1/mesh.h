@@ -6,14 +6,17 @@
 
 namespace Mesh {
 
+typedef Vector<3> V3;
+typedef std::vector<V3 const *> Polygon;
+
 class PointSet
 {
 public:
-  void translate(std::vector<Vector<3> const *> const &in,
+  void translate(std::vector<V3 const *> const &in,
 		 std::vector<int> &out)
   {
     for (int i = 0; i < in.size(); ++i) {
-      std::pair<std::map<Vector<3> const *, int>::iterator, bool> inserted
+      std::pair<std::map<V3 const *, int>::iterator, bool> inserted
 	= point_to_index.insert(std::make_pair(in[i], points.size()));
       if (inserted.second) {
 	deref_points.push_back(*in[i]);
@@ -23,37 +26,37 @@ public:
     }
   }
 
-  void translate(std::map<Vector<3> const *, Vector<3> > const &in,
-		 std::vector<Vector<3> > &out)
+  void translate(std::map<V3 const *, V3> const &in,
+		 std::vector<V3> &out)
   {
     for (int i = 0; i < points.size(); ++i) {
-      std::map<Vector<3> const *, Vector<3> >::const_iterator found
+      std::map<V3 const *, V3>::const_iterator found
 	= in.find(points[i]);
       if (found != in.end()) {
 	out.push_back(found->second);
       } else {
-	out.push_back(Vector<3>());
+	out.push_back(V3());
       }
     }
   }
 
-  std::vector<Vector<3> > const &raw()
+  std::vector<V3> const &raw()
   {
     return deref_points;
   }
 
 private:
-  std::vector<Vector<3> const *> points;
-  std::vector<Vector<3> > deref_points;
-  std::map<Vector<3> const *, int> point_to_index;
+  std::vector<V3 const *> points;
+  std::vector<V3> deref_points;
+  std::map<V3 const *, int> point_to_index;
 };
 
 void polygons_to_triangles(
-    std::vector<std::vector<Vector<3> const *> > const &polygons,
-    std::vector<Vector<3> const *> &triangles);
+    std::vector<Polygon> const &polygons,
+    std::vector<V3 const *> &triangles);
 
 void compute_polygon_normals(
-    std::vector<std::vector<Vector<3> const *> > const &polygons,
-    std::map<Vector<3> const *, Vector<3> > &normals);
+    std::vector<Polygon> const &polygons,
+    std::map<V3 const *, V3> &normals);
 
 };
