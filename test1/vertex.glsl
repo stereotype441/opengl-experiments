@@ -20,9 +20,9 @@ void main(void)
   // So, for fun, I'm going to try computing a normal matrix in eye
   // coordinates, and then map that to a color.
   vec3 normal = normalize(gl_NormalMatrix * gl_Normal);
-  if (normal.z < 0.0) {
-    normal = -normal;
-  }
+  //if (normal.z < 0.0) {
+  //  normal = -normal;
+  //}
   gl_FrontColor.rgb = 0.5*(normal + vec3(1,1,1));
   gl_FrontColor.a = 0.0;
 }
