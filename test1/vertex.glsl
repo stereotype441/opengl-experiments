@@ -1,5 +1,6 @@
 uniform float current_surface;
 uniform float show_mobius;
+uniform float one_surface_only;
 attribute float surface_index;
 attribute float mobius_flag;
 
@@ -40,5 +41,9 @@ void main(void)
       gl_FrontColor.rgb = 0.1*gl_FrontColor.rgb + vec3(0.9, 0.9, 0.9);
     }
   }
-  gl_FrontColor.a = 0.0;
+  if (one_surface_only != 0.0 && current_surface != surface_index) {
+    gl_FrontColor.a = 0.0;
+  } else {
+    gl_FrontColor.a = 1.0;
+  }
 }

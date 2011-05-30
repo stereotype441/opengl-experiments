@@ -20,13 +20,19 @@ extern "C" {
 
 using namespace std;
 
-int rotation = 0;
+int lr_rotation = 0;
+int ud_rotation = 0;
+float lr_translation = 0;
+float ud_translation = 0;
+float zoom = 1.0;
 
 int current_surface = 0;
 GLuint current_surface_handle;
 int num_triangles;
 int num_surfaces;
 bool show_mobius = false;
+bool one_surface_only = false;
+GLuint one_surface_only_handle;
 GLuint show_mobius_handle;
 
 float colors[25][3] = {
@@ -192,6 +198,7 @@ void setup_data(GLuint program)
   glEnableVertexAttribArray(mobius_flag_handle);
 
   show_mobius_handle = glGetUniformLocation(program, "show_mobius");
+  one_surface_only_handle = glGetUniformLocation(program, "one_surface_only");
 
   // Set up triangle inputs.  This will be used for future invocations
   // of glDrawElements().
@@ -214,11 +221,14 @@ void display()
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  glRotatef(rotation, 0.0, 1.0, 0.0);
-  float scale_amount = 1.8;
-  glScalef(scale_amount, scale_amount, scale_amount);
+  glScalef(1.0, 1.0, 1.0/zoom);
+  glTranslatef(lr_translation, ud_translation, 0.0);
+  glRotatef(ud_rotation, -1.0, 0.0, 0.0);
+  glRotatef(lr_rotation, 0.0, 1.0, 0.0);
+  glScalef(zoom, zoom, zoom);
   glUniform1f(current_surface_handle, current_surface);
   glUniform1f(show_mobius_handle, show_mobius);
+  glUniform1f(one_surface_only_handle, one_surface_only);
 
   // glColor3fv(colors[i % 25]);
   glDrawElements(GL_TRIANGLES, num_triangles, GL_UNSIGNED_INT, 0);
@@ -236,13 +246,43 @@ void keyboard(unsigned char key, int x, int y)
   case 0x1b: // ESC
     exit(0);
     break;
-  case 'f':
-    while (true) {
-      rotation += 1;
-      display();
-    }
   case 'm':
     show_mobius = !show_mobius;
+    break;
+  case 'h':
+    one_surface_only = !one_surface_only;
+    break;
+  case 'q':
+    ud_rotation += 1;
+    if (ud_rotation > 90) {
+      ud_rotation = 90;
+    }
+    break;
+  case 'a':
+    ud_rotation -= 1;
+    if (ud_rotation < -90) {
+      ud_rotation = -90;
+    }
+    break;
+  case 'x':
+    lr_rotation = (lr_rotation + 1) % 360;
+    break;
+  case 'z':
+    lr_rotation = (lr_rotation + 359) % 360;
+    break;
+  case '[':
+    zoom *= 0.99;
+    break;
+  case ']':
+    zoom *= 1.01;
+    break;
+  case 'b':
+    current_surface = (current_surface + 1) % num_surfaces;
+    cout << "Surface " << current_surface << endl;
+    break;
+  case 'v':
+    current_surface = (current_surface + num_surfaces - 1) % num_surfaces;
+    cout << "Surface " << current_surface << endl;
     break;
   default:
     cout << "key " << (int) key << endl;
@@ -255,18 +295,16 @@ void special(int key, int x, int y)
 {
   switch (key) {
   case GLUT_KEY_LEFT:
-    rotation += 1;
+    lr_translation -= 0.01/zoom;
     break;
   case GLUT_KEY_RIGHT:
-    rotation -= 1;
+    lr_translation += 0.01/zoom;
     break;
   case GLUT_KEY_DOWN:
-    current_surface = (current_surface + 1) % num_surfaces;
-    cout << "Surface " << current_surface << endl;
+    ud_translation -= 0.01/zoom;
     break;
   case GLUT_KEY_UP:
-    current_surface = (current_surface + num_surfaces - 1) % num_surfaces;
-    cout << "Surface " << current_surface << endl;
+    ud_translation += 0.01/zoom;
     break;
   default:
     cout << "special " << key << endl;
