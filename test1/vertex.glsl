@@ -1,3 +1,6 @@
+uniform float current_surface;
+attribute float surface_index;
+
 void main(void)
 {
   gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
@@ -23,6 +26,10 @@ void main(void)
   //if (normal.z < 0.0) {
   //  normal = -normal;
   //}
-  gl_FrontColor.rgb = 0.5*(normal + vec3(1,1,1));
+  if (current_surface == surface_index) {
+    gl_FrontColor.rgb = 0.25*normal + vec3(0.75,0.75,0.75);
+  } else {
+    gl_FrontColor.rgb = 0.5*normal + vec3(0.5,0.5,0.5);
+  }
   gl_FrontColor.a = 0.0;
 }
