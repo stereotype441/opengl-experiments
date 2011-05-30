@@ -13,6 +13,8 @@
 extern "C" {
   extern char _binary_vertex_glsl_start;
   extern char _binary_vertex_glsl_end;
+  extern char _binary_fragment_glsl_start;
+  extern char _binary_fragment_glsl_end;
   extern char _binary____models_elfegab_lwo_start;
 }
 
@@ -64,27 +66,43 @@ void check_program_info_log(GLuint program, GLenum pname)
   }
 }
 
-GLuint setup_shaders()
+void check_shader_info_log(GLuint shader)
 {
-  GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-  GLchar const *strings[1] = { &_binary_vertex_glsl_start };
-  GLint lengths[1] = { &_binary_vertex_glsl_end - &_binary_vertex_glsl_start };
-  glShaderSource(vertex_shader, 1, strings, lengths);
-  glCompileShader(vertex_shader);
   GLint success;
-  glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+  glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
   if (!success) {
     GLint info_log_length;
-    glGetShaderiv(vertex_shader, GL_INFO_LOG_LENGTH, &info_log_length);
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_log_length);
     GLchar *msg = new GLchar[info_log_length];
-    glGetShaderInfoLog(vertex_shader, info_log_length, NULL, msg);
+    glGetShaderInfoLog(shader, info_log_length, NULL, msg);
     cout << "Compile failed: " << msg << endl;
     delete msg;
     exit(1);
   }
+}
+
+GLuint setup_shaders()
+{
+  GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+  GLchar const *vertex_strings[1] = { &_binary_vertex_glsl_start };
+  GLint vertex_lengths[1] = {
+    &_binary_vertex_glsl_end - &_binary_vertex_glsl_start
+  };
+  glShaderSource(vertex_shader, 1, vertex_strings, vertex_lengths);
+  glCompileShader(vertex_shader);
+  check_shader_info_log(vertex_shader);
+
+  GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+  GLchar const *fragment_strings[1] = { &_binary_fragment_glsl_start };
+  GLint fragment_lengths[1] = {
+    &_binary_fragment_glsl_end - &_binary_fragment_glsl_start };
+  glShaderSource(fragment_shader, 1, fragment_strings, fragment_lengths);
+  glCompileShader(fragment_shader);
+  check_shader_info_log(fragment_shader);
 
   GLuint program = glCreateProgram();
   glAttachShader(program, vertex_shader);
+  glAttachShader(program, fragment_shader);
   glLinkProgram(program);
   check_program_info_log(program, GL_LINK_STATUS);
   glValidateProgram(program);

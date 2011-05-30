@@ -3,7 +3,7 @@
 TARGET = test
 LIBS = -lglut -lGLU -lGL -lXmu -lXext -lXi -lX11 -lm
 SRCS = test.cpp lwo_parser.cpp mesh.cpp
-GLSL_SRCS = vertex.glsl
+GLSL_SRCS = vertex.glsl fragment.glsl
 
 default: $(TARGET)
 
