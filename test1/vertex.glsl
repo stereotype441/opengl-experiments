@@ -1,5 +1,7 @@
 uniform float current_surface;
+uniform float show_mobius;
 attribute float surface_index;
+attribute float mobius_flag;
 
 void main(void)
 {
@@ -30,6 +32,13 @@ void main(void)
     gl_FrontColor.rgb = 0.25*normal + vec3(0.75,0.75,0.75);
   } else {
     gl_FrontColor.rgb = 0.5*normal + vec3(0.5,0.5,0.5);
+  }
+  if (show_mobius != 0.0) {
+    if (mobius_flag != 0.0) {
+      gl_FrontColor.rgb = 0.1*gl_FrontColor.rgb + vec3(0.9, 0.0, 0.0);
+    } else {
+      gl_FrontColor.rgb = 0.1*gl_FrontColor.rgb + vec3(0.9, 0.9, 0.9);
+    }
   }
   gl_FrontColor.a = 0.0;
 }

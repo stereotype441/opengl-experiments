@@ -28,10 +28,12 @@ void mesh_to_triangles(Mesh const &mesh, V3List &triangles)
   }
 }
 
-void compute_mesh_normals(Mesh const &mesh, std::map<V3 const *, V3> &normals)
+void compute_mesh_normals(
+    Mesh const &mesh, std::map<V3 const *, V3> &normals,
+    std::map<V3 const *, bool> &mobius_flags)
 {
   std::map<Polygon const *, int> orientations;
-  assign_polygon_orientations(mesh, orientations);
+  assign_polygon_orientations(mesh, orientations, mobius_flags);
 
   // For each polygon:
   for (int i = 0; i < mesh.size(); ++i) {
@@ -64,11 +66,12 @@ void compute_mesh_normals(Mesh const &mesh, std::map<V3 const *, V3> &normals)
   }
 }
 
+typedef std::pair<V3 const *, V3 const *> Edge;
+
 void split_mesh_edgewise(Mesh const &mesh, std::vector<Mesh> &surfaces)
 {
   // Make a map from each edge to a list of pointers to polygons that
   // touch it.  An edge is defined as a sorted pair of V3 pointers.
-  typedef std::pair<V3 const *, V3 const *> Edge;
   std::map<Edge, std::vector<Polygon const *> > edge_to_poly;
   for (int i = 0; i < mesh.size(); ++i) {
     Polygon const *poly = mesh[i];
@@ -207,8 +210,22 @@ void compute_surface_indices(
   }
 }
 
+struct AssignPolygonOrientationsAdjacencyData
+{
+  AssignPolygonOrientationsAdjacencyData(
+      Polygon const *_polygon, int _join_orientation, Edge const &_edge)
+    : polygon(_polygon), join_orientation(_join_orientation), edge(_edge)
+  {
+  }
+
+  Polygon const *polygon;
+  int join_orientation;
+  Edge edge;
+};
+
 void assign_polygon_orientations(
-    Mesh const &mesh, std::map<Polygon const *, int> &orientations)
+    Mesh const &mesh, std::map<Polygon const *, int> &orientations,
+    std::map<V3 const *, bool> &mobius_flags)
 {
   // First construct a map from each edge to a list of pairs, where
   // the pairs consist of (polygon containing that edge,
@@ -216,7 +233,6 @@ void assign_polygon_orientations(
   // of V3 pointers.  An orientation is 1 if the sorted pair of V3
   // pointers is in the same order it appears in the polygon, -1 if
   // it's in the opposite order.
-  typedef std::pair<V3 const *, V3 const *> Edge;
   typedef std::pair<Polygon const *, int> EdgeData;
   std::map<Edge, std::vector<EdgeData> > edge_data_map;
   for (int i = 0; i < mesh.size(); ++i) {
@@ -233,14 +249,15 @@ void assign_polygon_orientations(
   }
 
   // Now construct a map from each polygon to a list of pairs, where
-  // the pairs consist of (adjoining polygon, orientation of the
-  // join).  The orientation of a join is 1 if the common edge is
-  // contained in the two polygons in opposite orientation, -1 if it
-  // is contained in the two polygons in the same orientation.
-  typedef std::pair<Polygon const *, int> AdjacencyData;
+  // the pairs consist of (adjoining polygon, orientation of the join,
+  // shared vertices).  The orientation of a join is 1 if the common
+  // edge is contained in the two polygons in opposite orientation, -1
+  // if it is contained in the two polygons in the same orientation.
+  typedef AssignPolygonOrientationsAdjacencyData AdjacencyData;
   std::map<Polygon const *, std::vector<AdjacencyData> > adjacency;
   for (std::map<Edge, std::vector<EdgeData> >::const_iterator iter
 	 = edge_data_map.begin(); iter != edge_data_map.end(); ++iter) {
+    Edge const &edge = iter->first;
     std::vector<EdgeData> const &edge_data = iter->second;
     for (int i = 0; i < edge_data.size(); ++i) {
       for (int j = 0; j < edge_data.size(); ++j) {
@@ -251,8 +268,8 @@ void assign_polygon_orientations(
 	    int x_orientation = edge_data[i].second;
 	    int y_orientation = edge_data[j].second;
 	    int join_orientation = -1 * x_orientation * y_orientation;
-	    adjacency[x].push_back(make_pair(y, join_orientation));
-	    adjacency[y].push_back(make_pair(x, join_orientation));
+	    adjacency[x].push_back(AdjacencyData(y, join_orientation, edge));
+	    adjacency[y].push_back(AdjacencyData(x, join_orientation, edge));
 	  }
 	}
       }
@@ -281,8 +298,9 @@ void assign_polygon_orientations(
       polys_to_traverse.pop_back();
       std::vector<AdjacencyData> const &adjacency_data = adjacency[poly];
       for (int i = 0; i < adjacency_data.size(); ++i) {
-	Polygon const *adjacent_polygon = adjacency_data[i].first;
-	int join_orientation = adjacency_data[i].second;
+	Polygon const *adjacent_polygon = adjacency_data[i].polygon;
+	int join_orientation = adjacency_data[i].join_orientation;
+	Edge const &edge = adjacency_data[i].edge;
 	std::set<Polygon const *>::iterator found
 	  = unassigned_polygons.find(adjacent_polygon);
 	if (found != unassigned_polygons.end()) {
@@ -293,6 +311,8 @@ void assign_polygon_orientations(
 	} else if (orientations[adjacent_polygon]
 	      != orientations[poly] * join_orientation) {
 	  cout << "Warning: mobius surface" << endl;
+	  mobius_flags[edge.first] = true;
+	  mobius_flags[edge.second] = true;
 	}
       }
     }

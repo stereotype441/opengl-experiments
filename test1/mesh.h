@@ -43,6 +43,20 @@ public:
     }
   }
 
+  void translate(std::map<V3 const *, bool> const &in,
+		 std::vector<char> &out)
+  {
+    for (int i = 0; i < points.size(); ++i) {
+      typename std::map<V3 const *, bool>::const_iterator found
+	= in.find(points[i]);
+      if (found != in.end()) {
+	out.push_back(found->second);
+      } else {
+	out.push_back(false);
+      }
+    }
+  }
+
   std::vector<V3> const &raw()
   {
     return deref_points;
@@ -56,7 +70,9 @@ private:
 
 void mesh_to_triangles(Mesh const &mesh, V3List &triangles);
 
-void compute_mesh_normals(Mesh const &mesh, std::map<V3 const *, V3> &normals);
+void compute_mesh_normals(
+    Mesh const &mesh, std::map<V3 const *, V3> &normals,
+    std::map<V3 const *, bool> &mobius_flags);
 
 void split_mesh_pointwise(Mesh const &mesh, std::vector<Mesh> &sub_meshes);
 
@@ -66,6 +82,7 @@ void compute_surface_indices(
     std::vector<Mesh> const &surfaces, std::map<V3 const *, int> &indices);
 
 void assign_polygon_orientations(
-    Mesh const &mesh, std::map<Polygon const *, int> &orientations);
+    Mesh const &mesh, std::map<Polygon const *, int> &orientations,
+    std::map<V3 const *, bool> &mobius_flags);
 
 };

@@ -26,6 +26,8 @@ int current_surface = 0;
 GLuint current_surface_handle;
 int num_triangles;
 int num_surfaces;
+bool show_mobius = false;
+GLuint show_mobius_handle;
 
 float colors[25][3] = {
   { 0.0, 0.0, 0.5 },
@@ -122,8 +124,9 @@ void setup_data(GLuint program)
 
   // Compute vertex, normal, and triangle vectors.
   std::map<Vector<3> const *, Vector<3> > normals;
+  std::map<Mesh::V3 const *, bool> mobius_flags;
   Mesh::compute_mesh_normals(model->layers[0]->polygons[1]->polygons,
-			     normals);
+			     normals, mobius_flags);
   std::vector<Mesh::Mesh> surfaces;
   Mesh::split_mesh_pointwise(model->layers[0]->polygons[1]->polygons, surfaces);
   num_surfaces = surfaces.size();
@@ -140,6 +143,8 @@ void setup_data(GLuint program)
   points.translate(normals, normal_array);
   std::vector<int> surface_index_array;
   points.translate(surface_indices, surface_index_array);
+  std::vector<char> mobius_flag_array;
+  points.translate(mobius_flags, mobius_flag_array);
 
   // Set up vertex inputs
   glGenBuffers(1, &buffer);	// Allocate GPU buffer
@@ -173,7 +178,20 @@ void setup_data(GLuint program)
   glVertexAttribIPointer(surface_index_handle, 1, GL_INT, 0, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glEnableVertexAttribArray(surface_index_handle);
+
   current_surface_handle = glGetUniformLocation(program, "current_surface");
+
+  // Set up error flag inputs.
+  glGenBuffers(1, &buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, buffer);
+  glBufferData(GL_ARRAY_BUFFER, surface_indices.size() * sizeof(int),
+	       &mobius_flag_array[0], GL_STATIC_DRAW);
+  GLuint mobius_flag_handle = glGetAttribLocation(program, "mobius_flag");
+  glVertexAttribIPointer(mobius_flag_handle, 1, GL_BYTE, 0, 0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glEnableVertexAttribArray(mobius_flag_handle);
+
+  show_mobius_handle = glGetUniformLocation(program, "show_mobius");
 
   // Set up triangle inputs.  This will be used for future invocations
   // of glDrawElements().
@@ -200,6 +218,7 @@ void display()
   float scale_amount = 1.8;
   glScalef(scale_amount, scale_amount, scale_amount);
   glUniform1f(current_surface_handle, current_surface);
+  glUniform1f(show_mobius_handle, show_mobius);
 
   // glColor3fv(colors[i % 25]);
   glDrawElements(GL_TRIANGLES, num_triangles, GL_UNSIGNED_INT, 0);
@@ -222,6 +241,9 @@ void keyboard(unsigned char key, int x, int y)
       rotation += 1;
       display();
     }
+  case 'm':
+    show_mobius = !show_mobius;
+    break;
   default:
     cout << "key " << (int) key << endl;
     break;
