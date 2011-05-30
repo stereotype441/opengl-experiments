@@ -6,6 +6,13 @@ template<int size>
 class Vector
 {
 public:
+  Vector()
+  {
+    for (int i = 0; i < size; ++i) {
+      coords[i] = 0;
+    }
+  }
+
   float coords[size];
 
   float norm_sq() const

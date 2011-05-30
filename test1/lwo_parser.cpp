@@ -73,9 +73,9 @@ private:
 void handle_pnts(FileIterator iter, Layer *layer)
 {
   while (iter.remaining()) {
-    Vector<3> point;
+    Vector<3> *point = new Vector<3>();
     for (int i = 0; i < 3; ++i) {
-      point[i] = iter.get_float();
+      (*point)[i] = iter.get_float();
     }
     layer->points.push_back(point);
   }
@@ -89,11 +89,11 @@ void handle_pols(FileIterator iter, Layer *layer)
     unsigned short num_vertices_and_flags = iter.get_uint(2);
     int num_vertices = num_vertices_and_flags & 0x3ff;
     // TODO: ignoring flags for now.
-    std::vector<unsigned int> vertex_indices;
+    std::vector<Vector<3> const *> vertex_pointers;
     for (int i = 0; i < num_vertices; ++i) {
-      vertex_indices.push_back(iter.get_vx());
+      vertex_pointers.push_back(layer->points[iter.get_vx()]);
     }
-    pols->polygons.push_back(vertex_indices);
+    pols->polygons.push_back(vertex_pointers);
   }
   layer->polygons.push_back(pols);
 }

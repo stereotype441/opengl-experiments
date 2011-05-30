@@ -6,63 +6,57 @@ using namespace std;
 namespace Mesh {
 
 void polygons_to_triangles(
-    std::vector<std::vector<unsigned int> > const &polygons,
-    std::vector<unsigned int> &triangles)
+    std::vector<std::vector<Vector<3> const *> > const &polygons,
+    std::vector<Vector<3> const *> &triangles)
 {
-  for (std::vector<std::vector<unsigned int> >::const_iterator poly
-	 = polygons.begin(); poly < polygons.end(); ++poly) {
-    size_t poly_size = poly->size();
-    if (poly_size < 3) {
+  // For each polygon:
+  for (int i = 0; i < polygons.size(); ++i) {
+    std::vector<Vector<3> const *> const &polygon = polygons[i];
+
+    // If the polygon has at least 3 vertices:
+    if (polygon.size() < 3) {
       cout << "Warning: polygon with fewer than 3 vertices" << endl;
     } else {
-      for (int i = 2; i < poly_size; ++i) {
-	triangles.push_back((*poly)[0]);
-	triangles.push_back((*poly)[i-1]);
-	triangles.push_back((*poly)[i]);
+
+      // Then arbitrarily create a triangle fan centered at the first
+      // vertex.
+      for (int i = 2; i < polygon.size(); ++i) {
+	triangles.push_back(polygon[0]);
+	triangles.push_back(polygon[i-1]);
+	triangles.push_back(polygon[i]);
       }
     }
   }
 }
 
 void compute_polygon_normals(
-    std::vector<Vector<3> > const &points,
-    std::vector<std::vector<unsigned int> > const &polygons,
-    std::vector<Vector<3> > &normals)
+    std::vector<std::vector<Vector<3> const *> > const &polygons,
+    std::map<Vector<3> const *, Vector<3> > &normals)
 {
-  // Start by making a map from point to the indices of the polygons
-  // that contain it.
-  std::vector<std::vector<std::pair<int, int> > >
-    point_to_polygons(points.size());
+  // For each polygon:
   for (int i = 0; i < polygons.size(); ++i) {
-    for (int j = 0; j < polygons[i].size(); ++j) {
-      point_to_polygons[polygons[i][j]].push_back(
-          std::pair<int, int>(i, j));
+    std::vector<Vector<3> const *> const &polygon = polygons[i];
+    // For each point within that polygon:
+    for (int j = 0; j < polygon.size(); ++j) {
+      Vector<3> const *point = polygon[j];
+      // Compute the vectors from the previous point to this one, and
+      // from this point to the next one.
+      int sz = polygon.size();
+      Vector<3> const *prev_point = polygon[(j + sz - 1) % sz];
+      Vector<3> const *next_point = polygon[(j + 1) % sz];
+      Vector<3> incoming = *point - *prev_point;
+      Vector<3> outgoing = *next_point - *point;
+      Vector<3> normal = incoming % outgoing;
+
+      // And sum into the "normals" map.
+      normals[point] += normal;
     }
   }
 
-  Vector<3> zero_vector;
-  for (int i = 0; i < 3; ++i) {
-    zero_vector[i] = 0;
-  }
-
-  for (int vertex = 0; vertex < points.size(); ++vertex) {
-    if (point_to_polygons[vertex].size() == 0) {
-      normals.push_back(zero_vector);
-    } else {
-      Vector<3> normal_vector(zero_vector);
-      for (int j = 0; j < point_to_polygons[vertex].size(); ++j) {
-	std::pair<int, int> const &poly_ref = point_to_polygons[vertex][j];
-	std::vector<unsigned int> const &poly = polygons[poly_ref.first];
-	int poly_size = poly.size();
-	unsigned int next_vertex = poly[(poly_ref.second + 1) % poly_size];
-	unsigned int prev_vertex
-	  = poly[(poly_ref.second + (poly_size-1)) % poly_size];
-	Vector<3> a = points[vertex] - points[prev_vertex];
-	Vector<3> b = points[next_vertex] - points[vertex];
-	normal_vector += (a % b).normalize();
-      }
-      normals.push_back(normal_vector.normalize());
-    }
+  // Now re-normalize every element of the "normals" map.
+  for (std::map<Vector<3> const *, Vector<3> >::iterator normal_iter
+	 = normals.begin(); normal_iter != normals.end(); ++normal_iter) {
+    normal_iter->second = normal_iter->second.normalize();
   }
 }
 

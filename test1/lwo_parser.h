@@ -7,12 +7,12 @@ namespace Lwo {
 struct Pols
 {
   std::string type;
-  std::vector<std::vector<unsigned int> > polygons;
+  std::vector<std::vector<Vector<3> const *> > polygons;
 };
 
 struct Layer
 {
-  std::vector<Vector<3> > points;
+  std::vector<Vector<3> *> points;
   std::vector<Pols *> polygons;
 };
 
