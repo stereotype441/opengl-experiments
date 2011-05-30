@@ -7,16 +7,19 @@
 #include <stdlib.h>
 #include <iostream>
 
-#include "generated.h"
+#include "lwo_parser.h"
+#include "mesh.h"
 
 extern "C" {
   extern char _binary_vertex_glsl_start;
   extern char _binary_vertex_glsl_end;
+  extern char _binary____models_elfegab_lwo_start;
 }
 
 using namespace std;
 
 int rotation = 0;
+int num_triangles;
 
 float colors[25][3] = {
   { 0.0, 0.0, 0.5 },
@@ -61,7 +64,7 @@ void check_program_info_log(GLuint program, GLenum pname)
   }
 }
 
-void setup_shaders()
+GLuint setup_shaders()
 {
   GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
   GLchar const *strings[1] = { &_binary_vertex_glsl_start };
@@ -86,6 +89,12 @@ void setup_shaders()
   check_program_info_log(program, GL_LINK_STATUS);
   glValidateProgram(program);
   check_program_info_log(program, GL_VALIDATE_STATUS);
+  return program;
+}
+
+void setup_data(GLuint program)
+{
+  Lwo::Lwo *model = Lwo::parse(&_binary____models_elfegab_lwo_start);
 
   // Make buffers for inputs
   GLuint buffers[2];
@@ -93,8 +102,9 @@ void setup_shaders()
 
   // Set up vertex inputs
   glBindBuffer(GL_ARRAY_BUFFER, buffers[0]); // Make GL_ARRAY_BUFFER point to buffers[0]
-  glBufferData(GL_ARRAY_BUFFER, num_points_in_layer_0 * 3 * sizeof(float),
-	       layer_0_points, GL_STATIC_DRAW
+  glBufferData(GL_ARRAY_BUFFER,
+	       model->layers[0]->points.size() * 3 * sizeof(float),
+	       &model->layers[0]->points[0], GL_STATIC_DRAW
 	       ); // Copy data into what GL_ARRAY_BUFFER points to
   glVertexPointer(3, // Num components in each vector
 		  GL_FLOAT, // Data type of each vector component
@@ -106,10 +116,13 @@ void setup_shaders()
 
   // Set up triangle inputs.  This will be used for future invocations
   // of glDrawElements().
+  std::vector<unsigned int> triangles;
+  Mesh::polygons_to_triangles(model->layers[0]->polygons[1]->polygons,
+			      triangles);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[1]);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-	       layer_0_tris_PTCH_size * 3 * sizeof(int), layer_0_tris_PTCH,
-	       GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, triangles.size() * sizeof(int),
+	       &triangles[0], GL_STATIC_DRAW);
+  num_triangles = triangles.size();
 
   // Get ready to use the program
   glUseProgram(program);
@@ -129,7 +142,7 @@ void display()
   glScalef(scale_amount, scale_amount, scale_amount);
 
   // glColor3fv(colors[i % 25]);
-  glDrawElements(GL_TRIANGLES, 3*layer_0_tris_PTCH_size, GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_TRIANGLES, num_triangles, GL_UNSIGNED_INT, 0);
   glutSwapBuffers();
 }
 
@@ -183,6 +196,6 @@ int main(int argc, char **argv)
   glutReshapeFunc(reshape);
   glutKeyboardFunc(keyboard);
   glutSpecialFunc(special);
-  setup_shaders();
+  setup_data(setup_shaders());
   glutMainLoop();
 }

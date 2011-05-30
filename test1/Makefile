@@ -2,7 +2,7 @@
 
 TARGET = test
 LIBS = -lglut -lGLU -lGL -lXmu -lXext -lXi -lX11 -lm
-SRCS = test.cpp generated.cpp
+SRCS = test.cpp lwo_parser.cpp mesh.cpp
 GLSL_SRCS = vertex.glsl
 
 default: $(TARGET)
@@ -11,19 +11,21 @@ default: $(TARGET)
 
 all: default
 
-generated.h generated.cpp: code_gen.py
-	python code_gen.py
-
 %.glsl-o: %.glsl
 	ld -s -r -o $@ -b binary $<
 
-test.cpp: generated.h
+elfegab.lwo-o: ../models/elfegab.lwo
+	ld -s -r -o $@ -b binary $<
+
+test.cpp: mesh.h lwo_parser.h vectors.h
+mesh.cpp: mesh.h
+lwo_parser.cpp: vectors.h lwo_parser.h
 
 %.o: %.cpp
 	$(CXX) -g -c $<
 
-$(TARGET): $(SRCS:.cpp=.o) $(GLSL_SRCS:.glsl=.glsl-o)
+$(TARGET): $(SRCS:.cpp=.o) $(GLSL_SRCS:.glsl=.glsl-o) elfegab.lwo-o
 	$(CXX) -g $^ -Wall $(LIBS) -o $@
 
 clean:
-	rm -f *.o *.glsl-o $(TARGET) generated.*
+	rm -f *.o *.glsl-o *.lwo-o $(TARGET)
