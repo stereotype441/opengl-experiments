@@ -1,4 +1,6 @@
-#include "vectors.h"
+#pragma once
+
+#include "mesh.h"
 #include <vector>
 #include <string>
 
@@ -12,7 +14,6 @@ struct Pols
 
 struct Layer
 {
-  std::vector<Vector<3> *> points;
   std::vector<Pols *> polygons;
 };
 

@@ -1,5 +1,6 @@
 #include "lwo_parser.h"
 #include <cassert>
+#include <iostream>
 
 using namespace std;
 
@@ -70,18 +71,18 @@ private:
   char const *end;
 };
 
-void handle_pnts(FileIterator iter, Layer *layer)
+void handle_pnts(FileIterator iter, Mesh::V3List &points)
 {
   while (iter.remaining()) {
     Vector<3> *point = new Vector<3>();
     for (int i = 0; i < 3; ++i) {
       (*point)[i] = iter.get_float();
     }
-    layer->points.push_back(point);
+    points.push_back(point);
   }
 }
 
-void handle_pols(FileIterator iter, Layer *layer)
+Pols *handle_pols(FileIterator iter, Mesh::V3List const &points)
 {
   Pols *pols = new Pols();
   pols->type = iter.get_fixed_string(4);
@@ -91,11 +92,11 @@ void handle_pols(FileIterator iter, Layer *layer)
     // TODO: ignoring flags for now.
     std::vector<Vector<3> const *> vertex_pointers;
     for (int i = 0; i < num_vertices; ++i) {
-      vertex_pointers.push_back(layer->points[iter.get_vx()]);
+      vertex_pointers.push_back(points[iter.get_vx()]);
     }
     pols->polygons.push_back(vertex_pointers);
   }
-  layer->polygons.push_back(pols);
+  return pols;
 }
 
 Lwo *parse(void const *lwo_data)
@@ -103,6 +104,7 @@ Lwo *parse(void const *lwo_data)
   FileIterator file_iter(static_cast<char const *>(lwo_data), NULL);
   Lwo *result = new Lwo();
   Layer *current_layer = NULL;
+  Mesh::V3List current_points;
   std::string container_type = file_iter.get_fixed_string(4);
   assert (container_type == "FORM");
   unsigned int form_length = file_iter.get_uint(4);
@@ -118,11 +120,17 @@ Lwo *parse(void const *lwo_data)
     container_iter.advance(chunk_size);
     if (chunk_type == "LAYR") {
       current_layer = new Layer();
+      current_points.clear();
       result->layers.push_back(current_layer);
     } else if (chunk_type == "PNTS") {
-      handle_pnts(chunk_contents_iter, current_layer);
+      if (!current_points.empty()) {
+	cout << "Warning: multiple PNTS declarations in one layer" << endl;
+	current_points.clear();
+      }
+      handle_pnts(chunk_contents_iter, current_points);
     } else if (chunk_type == "POLS") {
-      handle_pols(chunk_contents_iter, current_layer);
+      current_layer->polygons.push_back(
+          handle_pols(chunk_contents_iter, current_points));
     }
   }
   return result;
