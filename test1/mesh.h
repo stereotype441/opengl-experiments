@@ -28,16 +28,17 @@ public:
     }
   }
 
-  void translate(std::map<V3 const *, V3> const &in,
-		 std::vector<V3> &out)
+  template<class C>
+  void translate(std::map<V3 const *, C> const &in,
+		 std::vector<C> &out)
   {
     for (int i = 0; i < points.size(); ++i) {
-      std::map<V3 const *, V3>::const_iterator found
+      typename std::map<V3 const *, C>::const_iterator found
 	= in.find(points[i]);
       if (found != in.end()) {
 	out.push_back(found->second);
       } else {
-	out.push_back(V3());
+	out.push_back(C());
       }
     }
   }
@@ -56,5 +57,12 @@ private:
 void mesh_to_triangles(Mesh const &mesh, V3List &triangles);
 
 void compute_mesh_normals(Mesh const &mesh, std::map<V3 const *, V3> &normals);
+
+void split_mesh_pointwise(Mesh const &mesh, std::vector<Mesh> &sub_meshes);
+
+void split_mesh_edgewise(Mesh const &mesh, std::vector<Mesh> &sub_meshes);
+
+void compute_surface_indices(
+    std::vector<Mesh> const &surfaces, std::map<V3 const *, int> &indices);
 
 };

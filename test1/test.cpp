@@ -19,7 +19,11 @@ extern "C" {
 using namespace std;
 
 int rotation = 0;
+
+int current_surface = 0;
+GLuint current_surface_handle;
 int num_triangles;
+int num_surfaces;
 
 float colors[25][3] = {
   { 0.0, 0.0, 0.5 },
@@ -102,6 +106,12 @@ void setup_data(GLuint program)
   std::map<Vector<3> const *, Vector<3> > normals;
   Mesh::compute_mesh_normals(model->layers[0]->polygons[1]->polygons,
 			     normals);
+  std::vector<Mesh::Mesh> surfaces;
+  Mesh::split_mesh_pointwise(model->layers[0]->polygons[1]->polygons, surfaces);
+  num_surfaces = surfaces.size();
+  cout << "Found " << num_surfaces << " surfaces." << endl;
+  std::map<Mesh::V3 const *, int> surface_indices;
+  Mesh::compute_surface_indices(surfaces, surface_indices);
   std::vector<Vector<3> const *> triangles;
   Mesh::mesh_to_triangles(model->layers[0]->polygons[1]->polygons,
 			  triangles);
@@ -110,9 +120,11 @@ void setup_data(GLuint program)
   points.translate(triangles, triangle_indices);
   std::vector<Vector<3> > normal_array;
   points.translate(normals, normal_array);
+  std::vector<int> surface_index_array;
+  points.translate(surface_indices, surface_index_array);
 
   // Set up vertex inputs
-  glGenBuffers(1, &buffer);	// Allocate GLU buffer
+  glGenBuffers(1, &buffer);	// Allocate GPU buffer
   glBindBuffer(GL_ARRAY_BUFFER, buffer); // Make GL_ARRAY_BUFFER point to buffer
   glBufferData(GL_ARRAY_BUFFER, points.raw().size() * 3 * sizeof(float),
 	       &points.raw()[0], GL_STATIC_DRAW
@@ -133,6 +145,17 @@ void setup_data(GLuint program)
   glNormalPointer(GL_FLOAT, 0, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glEnableClientState(GL_NORMAL_ARRAY);
+
+  // Set up surface index inputs.
+  glGenBuffers(1, &buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, buffer);
+  glBufferData(GL_ARRAY_BUFFER, surface_indices.size() * sizeof(int),
+	       &surface_index_array[0], GL_STATIC_DRAW);
+  GLuint surface_index_handle = glGetAttribLocation(program, "surface_index");
+  glVertexAttribIPointer(surface_index_handle, 1, GL_INT, 0, 0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glEnableVertexAttribArray(surface_index_handle);
+  current_surface_handle = glGetUniformLocation(program, "current_surface");
 
   // Set up triangle inputs.  This will be used for future invocations
   // of glDrawElements().
@@ -158,6 +181,7 @@ void display()
   glRotatef(rotation, 0.0, 1.0, 0.0);
   float scale_amount = 1.8;
   glScalef(scale_amount, scale_amount, scale_amount);
+  glUniform1f(current_surface_handle, current_surface);
 
   // glColor3fv(colors[i % 25]);
   glDrawElements(GL_TRIANGLES, num_triangles, GL_UNSIGNED_INT, 0);
@@ -195,6 +219,12 @@ void special(int key, int x, int y)
     break;
   case GLUT_KEY_RIGHT:
     rotation -= 1;
+    break;
+  case GLUT_KEY_DOWN:
+    current_surface = (current_surface + 1) % num_surfaces;
+    break;
+  case GLUT_KEY_UP:
+    current_surface = (current_surface + num_surfaces - 1) % num_surfaces;
     break;
   default:
     cout << "special " << key << endl;
