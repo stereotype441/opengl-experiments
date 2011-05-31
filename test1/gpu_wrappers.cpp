@@ -1,5 +1,9 @@
 #include "gpu_wrappers.h"
 
+#include <iostream>
+
+using namespace std;
+
 inline GLvoid const *translate_offset(size_t offset)
 {
   return static_cast<char const *>(NULL) + offset;
@@ -45,4 +49,24 @@ void draw_elements(GpuBuffer const *buffer, size_t count, size_t offset)
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer->handle());
   glDrawElements(
       GL_TRIANGLES, count, GL_UNSIGNED_INT, translate_offset(offset));
+}
+
+GpuShader::GpuShader(GLenum type, char const *source, size_t length)
+  : m_handle(glCreateShader(type))
+{
+  GLchar const *source_strings[1] = { source };
+  GLint source_lengths[1] = { length };
+  glShaderSource(m_handle, 1, source_strings, source_lengths);
+  glCompileShader(m_handle);
+  GLint success;
+  glGetShaderiv(m_handle, GL_COMPILE_STATUS, &success);
+  if (!success) {
+    GLint info_log_length;
+    glGetShaderiv(m_handle, GL_INFO_LOG_LENGTH, &info_log_length);
+    GLchar *msg = new GLchar[info_log_length];
+    glGetShaderInfoLog(m_handle, info_log_length, NULL, msg);
+    cout << "Compile failed: " << msg << endl;
+    delete msg;
+    throw GpuException();
+  }
 }

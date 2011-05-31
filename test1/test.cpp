@@ -103,43 +103,18 @@ void check_program_info_log(GLuint program, GLenum pname)
   }
 }
 
-void check_shader_info_log(GLuint shader)
-{
-  GLint success;
-  glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-  if (!success) {
-    GLint info_log_length;
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_log_length);
-    GLchar *msg = new GLchar[info_log_length];
-    glGetShaderInfoLog(shader, info_log_length, NULL, msg);
-    cout << "Compile failed: " << msg << endl;
-    delete msg;
-    exit(1);
-  }
-}
-
 GLuint setup_shaders()
 {
-  GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-  GLchar const *vertex_strings[1] = { &_binary_vertex_glsl_start };
-  GLint vertex_lengths[1] = {
-    &_binary_vertex_glsl_end - &_binary_vertex_glsl_start
-  };
-  glShaderSource(vertex_shader, 1, vertex_strings, vertex_lengths);
-  glCompileShader(vertex_shader);
-  check_shader_info_log(vertex_shader);
-
-  GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-  GLchar const *fragment_strings[1] = { &_binary_fragment_glsl_start };
-  GLint fragment_lengths[1] = {
-    &_binary_fragment_glsl_end - &_binary_fragment_glsl_start };
-  glShaderSource(fragment_shader, 1, fragment_strings, fragment_lengths);
-  glCompileShader(fragment_shader);
-  check_shader_info_log(fragment_shader);
+  GpuShader vertex_shader(
+      GL_VERTEX_SHADER, &_binary_vertex_glsl_start,
+      &_binary_vertex_glsl_end - &_binary_vertex_glsl_start);
+  GpuShader fragment_shader(
+      GL_FRAGMENT_SHADER, &_binary_fragment_glsl_start,
+      &_binary_fragment_glsl_end - &_binary_fragment_glsl_start);
 
   GLuint program = glCreateProgram();
-  glAttachShader(program, vertex_shader);
-  glAttachShader(program, fragment_shader);
+  glAttachShader(program, vertex_shader.handle());
+  glAttachShader(program, fragment_shader.handle());
   glLinkProgram(program);
   check_program_info_log(program, GL_LINK_STATUS);
   glValidateProgram(program);

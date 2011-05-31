@@ -8,6 +8,10 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 
+class GpuException
+{
+};
+
 class GpuBuffer
 {
 public:
@@ -60,3 +64,17 @@ void set_scalar_vertex_attrib(
     GpuBuffer const *buffer, GLuint attrib_handle, size_t offset);
 
 void draw_elements(GpuBuffer const *buffer, size_t count, size_t offset);
+
+class GpuShader
+{
+public:
+  GpuShader(GLenum type, char const *source, size_t length);
+
+  GLuint handle() const
+  {
+    return m_handle;
+  }
+
+private:
+  GLuint m_handle;
+};
