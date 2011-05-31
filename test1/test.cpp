@@ -122,19 +122,24 @@ GLuint setup_shaders()
   return program;
 }
 
-void setup_data(GLuint program)
+template<class C>
+GLuint setup_buffer(GLenum target, std::vector<C> const &data)
 {
+  // Allocate GPU buffer
   GLuint buffer;
+  glGenBuffers(1, &buffer);
 
-  Pmf::Data pmf_data(&_binary_elfegab_pmf_start);
-  pmf_data.get_typed_metadata("num_surfaces", &num_surfaces);
+  // Bind target to the buffer.
+  glBindBuffer(target, buffer);
 
-  // Set up vertex inputs
-  glGenBuffers(1, &buffer);	// Allocate GPU buffer
-  glBindBuffer(GL_ARRAY_BUFFER, buffer); // Make GL_ARRAY_BUFFER point to buffer
-  glBufferData(GL_ARRAY_BUFFER, pmf_data.points().size() * 3 * sizeof(float),
-	       &pmf_data.points()[0], GL_STATIC_DRAW
-	       ); // Copy data into what GL_ARRAY_BUFFER points to
+  // Copy data into the buffer via the target.
+  glBufferData(target, data.size() * sizeof(C), &data[0], GL_STATIC_DRAW);
+  return buffer;
+}
+
+GLuint setup_vertices(Pmf::Data const &pmf_data)
+{
+  GLuint buffer = setup_buffer(GL_ARRAY_BUFFER, pmf_data.points());
   glVertexPointer(3, // Num components in each vector
 		  GL_FLOAT, // Data type of each vector component
 		  0, // Stride, or 0 if packed
@@ -142,47 +147,51 @@ void setup_data(GLuint program)
 		  );
   glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind for safety
   glEnableClientState(GL_VERTEX_ARRAY);
+  return buffer;
+}
 
-  // Set up normal inputs.
-  glGenBuffers(1, &buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, buffer);
-  glBufferData(GL_ARRAY_BUFFER, pmf_data.point_vector_properties("normal").size() * 3 * sizeof(float),
-	       &pmf_data.point_vector_properties("normal")[0], GL_STATIC_DRAW);
+GLuint setup_normals(std::vector<Mesh::V3> const &normals)
+{
+  GLuint buffer = setup_buffer(GL_ARRAY_BUFFER, normals);
   glNormalPointer(GL_FLOAT, 0, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glEnableClientState(GL_NORMAL_ARRAY);
+  return buffer;
+}
 
-  // Set up surface index inputs.
-  glGenBuffers(1, &buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, buffer);
-  glBufferData(GL_ARRAY_BUFFER, pmf_data.point_scalar_properties("surface_index").size() * sizeof(int),
-	       &pmf_data.point_scalar_properties("surface_index")[0], GL_STATIC_DRAW);
-  GLuint surface_index_handle = glGetAttribLocation(program, "surface_index");
-  glVertexAttribPointer(surface_index_handle, 1, GL_FLOAT, GL_FALSE, 0, 0);
+GLuint setup_scalar_vertex_attrib(
+    GLuint program, std::vector<float> const &data, char const *attrib_name)
+{
+  GLuint buffer = setup_buffer(GL_ARRAY_BUFFER, data);
+  GLuint attrib_handle = glGetAttribLocation(program, attrib_name);
+  glVertexAttribPointer(attrib_handle, 1, GL_FLOAT, GL_FALSE, 0, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glEnableVertexAttribArray(surface_index_handle);
+  glEnableVertexAttribArray(attrib_handle);
+  return buffer;
+}
+
+GLuint setup_triangles(Pmf::Data const &pmf_data)
+{
+  return setup_buffer(GL_ELEMENT_ARRAY_BUFFER, pmf_data.triangles());
+}
+
+void setup_data(GLuint program)
+{
+  Pmf::Data pmf_data(&_binary_elfegab_pmf_start);
+  pmf_data.get_typed_metadata("num_surfaces", &num_surfaces);
+
+  setup_vertices(pmf_data);
+  setup_normals(pmf_data.point_vector_properties("normal"));
+  setup_scalar_vertex_attrib(
+      program, pmf_data.point_scalar_properties("surface_index"),
+      "surface_index");
 
   current_surface_handle = glGetUniformLocation(program, "current_surface");
-
-  // Set up mobius flag inputs.
-  glGenBuffers(1, &buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, buffer);
-  glBufferData(GL_ARRAY_BUFFER, pmf_data.point_scalar_properties("mobius_flag").size() * sizeof(int),
-	       &pmf_data.point_scalar_properties("mobius_flag")[0], GL_STATIC_DRAW);
-  GLuint mobius_flag_handle = glGetAttribLocation(program, "mobius_flag");
-  glVertexAttribPointer(mobius_flag_handle, 1, GL_FLOAT, GL_FALSE, 0, 0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glEnableVertexAttribArray(mobius_flag_handle);
-
+  setup_scalar_vertex_attrib(
+      program, pmf_data.point_scalar_properties("mobius_flag"), "mobius_flag");
   show_mobius_handle = glGetUniformLocation(program, "show_mobius");
   one_surface_only_handle = glGetUniformLocation(program, "one_surface_only");
-
-  // Set up triangle inputs.  This will be used for future invocations
-  // of glDrawElements().
-  glGenBuffers(1, &buffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, pmf_data.triangles().size() * sizeof(int),
-	       &pmf_data.triangles()[0], GL_STATIC_DRAW);
+  setup_triangles(pmf_data);
   num_triangles = pmf_data.triangles().size();
 
   // Get ready to use the program
