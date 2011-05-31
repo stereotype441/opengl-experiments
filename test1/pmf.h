@@ -47,6 +47,14 @@ public:
                                   reinterpret_cast<char const *>(data + 1));
   }
 
+  template<class C>
+  void add_vector_metadata(std::string const &key, std::vector<C> const &data)
+  {
+    m_metadata[key] = std::string(
+        reinterpret_cast<char const *>(&data[0]),
+        reinterpret_cast<char const *>(&data[0] + data.size()));
+  }
+
   std::vector<Mesh::V3> const &points() const
   {
     return m_points;
@@ -78,6 +86,14 @@ public:
   {
     assert (m_metadata[key].size() == sizeof(C));
     memcpy(data, &m_metadata[key][0], sizeof(C));
+  }
+
+  template<class C>
+  void get_vector_metadata(std::string const &key, std::vector<C> &data) const
+  {
+    assert (m_metadata[key].size() % sizeof(C) == 0);
+    data.resize(m_metadata[key].size() / sizeof(C));
+    memcpy(&data[0], &m_metadata[key][0], m_metadata[key].size());
   }
 
 private:

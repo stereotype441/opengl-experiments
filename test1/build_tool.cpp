@@ -63,15 +63,24 @@ int main()
   cout << "Found " << num_surfaces << " surfaces." << endl;
   std::map<Mesh::V3 const *, int> surface_indices;
   Mesh::compute_surface_indices(surfaces, surface_indices);
-  std::vector<Vector<3> const *> triangles;
-  Mesh::mesh_to_triangles(model->layers[0]->polygons[1]->polygons,
-			  triangles);
+
   Pmf::Data pmf_data;
-  pmf_data.add_triangles(triangles);
+  std::vector<int> surface_starts;
+  std::vector<int> surface_lengths;
+  for (int i = 0; i < static_cast<int>(surfaces.size()); ++i) {
+    std::vector<Vector<3> const *> triangles;
+    Mesh::mesh_to_triangles(surfaces[i], triangles);
+    int start = pmf_data.triangles().size();
+    surface_starts.push_back(start);
+    pmf_data.add_triangles(triangles);
+    surface_lengths.push_back(pmf_data.triangles().size() - start);
+  }
   pmf_data.add_vector_properties("normal", normals);
   pmf_data.add_scalar_properties("surface_index", surface_indices);
   pmf_data.add_scalar_properties("mobius_flag", mobius_flags);
   pmf_data.add_typed_metadata("num_surfaces", &num_surfaces);
+  pmf_data.add_vector_metadata("surface_starts", surface_starts);
+  pmf_data.add_vector_metadata("surface_lengths", surface_lengths);
 
   write_pmf_file("elfegab.pmf", pmf_data);
 }

@@ -34,6 +34,8 @@ public:
       m_triangles(data.triangles(), GL_ELEMENT_ARRAY_BUFFER)
   {
     data.get_typed_metadata("num_surfaces", &m_num_surfaces);
+    data.get_vector_metadata("surface_starts", m_surface_starts);
+    data.get_vector_metadata("surface_lengths", m_surface_lengths);
   }
 
   GpuBuffer m_vertices;
@@ -42,6 +44,8 @@ public:
   GpuBuffer m_mobius_flags;
   GpuBuffer m_triangles;
   int m_num_surfaces;
+  std::vector<int> m_surface_starts;
+  std::vector<int> m_surface_lengths;
 };
 
 class MyProgram : public GpuProgram
@@ -63,11 +67,9 @@ public:
     m_current_surface_handle = get_uniform_loc("current_surface");
     m_mobius_flag_handle = get_attrib_loc("mobius_flag");
     m_show_mobius_handle = get_uniform_loc("show_mobius");
-    m_one_surface_only_handle = get_uniform_loc("one_surface_only");
   }
 
   GLuint m_current_surface_handle;
-  GLuint m_one_surface_only_handle;
   GLuint m_show_mobius_handle;
   GLuint m_surface_index_handle;
   GLuint m_mobius_flag_handle;
@@ -129,7 +131,6 @@ void display()
   glScalef(zoom, zoom, zoom);
   glUniform1f(program->m_current_surface_handle, current_surface);
   glUniform1f(program->m_show_mobius_handle, show_mobius);
-  glUniform1f(program->m_one_surface_only_handle, one_surface_only);
 
   // glColor3fv(colors[i % 25]);
   set_vertices(&model_data->m_vertices, 0);
@@ -139,9 +140,16 @@ void display()
   set_scalar_vertex_attrib(
       &model_data->m_mobius_flags, program->m_mobius_flag_handle, 0);
   set_program(program);
-  draw_elements(
-      &model_data->m_triangles,
-      model_data->m_triangles.size() / sizeof(unsigned int), 0);
+  size_t count;
+  size_t start;
+  if (one_surface_only) {
+    start = model_data->m_surface_starts[current_surface];
+    count = model_data->m_surface_lengths[current_surface];
+  } else {
+    start = 0;
+    count = model_data->m_triangles.size() / sizeof(unsigned int);
+  }
+  draw_elements(&model_data->m_triangles, count, start * sizeof(unsigned int));
   glutSwapBuffers();
 }
 
