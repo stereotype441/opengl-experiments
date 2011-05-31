@@ -42,6 +42,23 @@ public:
   GpuBuffer m_triangles;
 };
 
+class MyProgram : public GpuProgram
+{
+public:
+  MyProgram()
+  {
+    GpuShader vertex_shader(
+        GL_VERTEX_SHADER, &_binary_vertex_glsl_start,
+        &_binary_vertex_glsl_end - &_binary_vertex_glsl_start);
+    Attach(vertex_shader);
+    GpuShader fragment_shader(
+        GL_FRAGMENT_SHADER, &_binary_fragment_glsl_start,
+        &_binary_fragment_glsl_end - &_binary_fragment_glsl_start);
+    Attach(fragment_shader);
+    Link();
+  }
+};
+
 int lr_rotation = 0;
 int ud_rotation = 0;
 float lr_translation = 0;
@@ -88,55 +105,21 @@ float colors[25][3] = {
   { 1.0, 1.0, 0.5 },
 };
 
-void check_program_info_log(GLuint program, GLenum pname)
-{
-  GLint success;
-  glGetProgramiv(program, pname, &success);
-  if (!success) {
-    GLint info_log_length;
-    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &info_log_length);
-    GLchar *msg = new GLchar[info_log_length];
-    glGetProgramInfoLog(program, info_log_length, NULL, msg);
-    cout << "Compile failed: " << msg << endl;
-    delete msg;
-    exit(1);
-  }
-}
-
-GLuint setup_shaders()
-{
-  GpuShader vertex_shader(
-      GL_VERTEX_SHADER, &_binary_vertex_glsl_start,
-      &_binary_vertex_glsl_end - &_binary_vertex_glsl_start);
-  GpuShader fragment_shader(
-      GL_FRAGMENT_SHADER, &_binary_fragment_glsl_start,
-      &_binary_fragment_glsl_end - &_binary_fragment_glsl_start);
-
-  GLuint program = glCreateProgram();
-  glAttachShader(program, vertex_shader.handle());
-  glAttachShader(program, fragment_shader.handle());
-  glLinkProgram(program);
-  check_program_info_log(program, GL_LINK_STATUS);
-  glValidateProgram(program);
-  check_program_info_log(program, GL_VALIDATE_STATUS);
-  return program;
-}
-
-void setup_data(GLuint program)
+void setup_data(GpuProgram *program)
 {
   Pmf::Data pmf_data(&_binary_elfegab_pmf_start);
   pmf_data.get_typed_metadata("num_surfaces", &num_surfaces);
 
   model_data = new ModelData(pmf_data);
 
-  surface_index_handle = glGetAttribLocation(program, "surface_index");
-  current_surface_handle = glGetUniformLocation(program, "current_surface");
-  mobius_flag_handle = glGetAttribLocation(program, "mobius_flag");
-  show_mobius_handle = glGetUniformLocation(program, "show_mobius");
-  one_surface_only_handle = glGetUniformLocation(program, "one_surface_only");
+  surface_index_handle = glGetAttribLocation(program->handle(), "surface_index");
+  current_surface_handle = glGetUniformLocation(program->handle(), "current_surface");
+  mobius_flag_handle = glGetAttribLocation(program->handle(), "mobius_flag");
+  show_mobius_handle = glGetUniformLocation(program->handle(), "show_mobius");
+  one_surface_only_handle = glGetUniformLocation(program->handle(), "one_surface_only");
 
   // Get ready to use the program
-  glUseProgram(program);
+  glUseProgram(program->handle());
 }
 
 void display()
@@ -260,6 +243,6 @@ int main(int argc, char **argv)
   glutReshapeFunc(reshape);
   glutKeyboardFunc(keyboard);
   glutSpecialFunc(special);
-  setup_data(setup_shaders());
+  setup_data(new MyProgram());
   glutMainLoop();
 }

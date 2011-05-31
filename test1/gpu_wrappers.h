@@ -78,3 +78,19 @@ public:
 private:
   GLuint m_handle;
 };
+
+class GpuProgram
+{
+public:
+  GpuProgram();
+  void Attach(GpuShader const &shader);
+  void Link();
+
+  GLuint handle() const
+  {
+    return m_handle;
+  }
+
+private:
+  GLuint m_handle;
+};

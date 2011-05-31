@@ -70,3 +70,29 @@ GpuShader::GpuShader(GLenum type, char const *source, size_t length)
     throw GpuException();
   }
 }
+
+GpuProgram::GpuProgram()
+  : m_handle(glCreateProgram())
+{
+}
+
+void GpuProgram::Attach(GpuShader const &shader)
+{
+  glAttachShader(m_handle, shader.handle());
+}
+
+void GpuProgram::Link()
+{
+  glLinkProgram(m_handle);
+  GLint success;
+  glGetProgramiv(m_handle, GL_LINK_STATUS, &success);
+  if (!success) {
+    GLint info_log_length;
+    glGetProgramiv(m_handle, GL_INFO_LOG_LENGTH, &info_log_length);
+    GLchar *msg = new GLchar[info_log_length];
+    glGetProgramInfoLog(m_handle, info_log_length, NULL, msg);
+    cout << "Compile failed: " << msg << endl;
+    delete msg;
+    throw GpuException();
+  }
+}
