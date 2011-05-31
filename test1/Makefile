@@ -1,5 +1,5 @@
 LIBS = -lglut -lGLU -lGL -lXmu -lXext -lXi -lX11 -lm
-LIB_SRCS = lwo_parser.cpp mesh.cpp pmf.cpp
+LIB_SRCS = lwo_parser.cpp mesh.cpp pmf.cpp gpu_wrappers.cpp
 GLSL_SRCS = vertex.glsl fragment.glsl
 SRCS = $(LIB_SRCS) test.cpp
 

@@ -9,6 +9,7 @@
 
 #include "mesh.h"
 #include "pmf.h"
+#include "gpu_wrappers.h"
 
 extern "C" {
   extern char _binary_vertex_glsl_start;
@@ -28,7 +29,7 @@ float zoom = 1.0;
 
 int current_surface = 0;
 GLuint current_surface_handle;
-int num_triangles;
+GpuBuffer *triangle_buffer;
 int num_surfaces;
 bool show_mobius = false;
 bool one_surface_only = false;
@@ -122,57 +123,27 @@ GLuint setup_shaders()
   return program;
 }
 
-template<class C>
-GLuint setup_buffer(GLenum target, std::vector<C> const &data)
+GpuBuffer *setup_vertices(Pmf::Data const &pmf_data)
 {
-  // Allocate GPU buffer
-  GLuint buffer;
-  glGenBuffers(1, &buffer);
-
-  // Bind target to the buffer.
-  glBindBuffer(target, buffer);
-
-  // Copy data into the buffer via the target.
-  glBufferData(target, data.size() * sizeof(C), &data[0], GL_STATIC_DRAW);
+  GpuBuffer *buffer = new GpuBuffer(pmf_data.points(), GL_ARRAY_BUFFER);
+  set_vertices(buffer, 0);
   return buffer;
 }
 
-GLuint setup_vertices(Pmf::Data const &pmf_data)
+GpuBuffer *setup_normals(std::vector<Mesh::V3> const &normals)
 {
-  GLuint buffer = setup_buffer(GL_ARRAY_BUFFER, pmf_data.points());
-  glVertexPointer(3, // Num components in each vector
-		  GL_FLOAT, // Data type of each vector component
-		  0, // Stride, or 0 if packed
-		  0 // pointer (within GL_ARRAY_BUFFER I presume?)
-		  );
-  glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind for safety
-  glEnableClientState(GL_VERTEX_ARRAY);
+  GpuBuffer *buffer = new GpuBuffer(normals, GL_ARRAY_BUFFER);
+  set_normals(buffer, 0);
   return buffer;
 }
 
-GLuint setup_normals(std::vector<Mesh::V3> const &normals)
-{
-  GLuint buffer = setup_buffer(GL_ARRAY_BUFFER, normals);
-  glNormalPointer(GL_FLOAT, 0, 0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glEnableClientState(GL_NORMAL_ARRAY);
-  return buffer;
-}
-
-GLuint setup_scalar_vertex_attrib(
+GpuBuffer *setup_scalar_vertex_attrib(
     GLuint program, std::vector<float> const &data, char const *attrib_name)
 {
-  GLuint buffer = setup_buffer(GL_ARRAY_BUFFER, data);
+  GpuBuffer *buffer = new GpuBuffer(data, GL_ARRAY_BUFFER);
   GLuint attrib_handle = glGetAttribLocation(program, attrib_name);
-  glVertexAttribPointer(attrib_handle, 1, GL_FLOAT, GL_FALSE, 0, 0);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glEnableVertexAttribArray(attrib_handle);
+  set_scalar_vertex_attrib(buffer, program, attrib_handle, 0);
   return buffer;
-}
-
-GLuint setup_triangles(Pmf::Data const &pmf_data)
-{
-  return setup_buffer(GL_ELEMENT_ARRAY_BUFFER, pmf_data.triangles());
 }
 
 void setup_data(GLuint program)
@@ -191,8 +162,8 @@ void setup_data(GLuint program)
       program, pmf_data.point_scalar_properties("mobius_flag"), "mobius_flag");
   show_mobius_handle = glGetUniformLocation(program, "show_mobius");
   one_surface_only_handle = glGetUniformLocation(program, "one_surface_only");
-  setup_triangles(pmf_data);
-  num_triangles = pmf_data.triangles().size();
+  triangle_buffer = new GpuBuffer(
+      pmf_data.triangles(), GL_ELEMENT_ARRAY_BUFFER);
 
   // Get ready to use the program
   glUseProgram(program);
@@ -217,7 +188,8 @@ void display()
   glUniform1f(one_surface_only_handle, one_surface_only);
 
   // glColor3fv(colors[i % 25]);
-  glDrawElements(GL_TRIANGLES, num_triangles, GL_UNSIGNED_INT, 0);
+  draw_elements(
+      triangle_buffer, triangle_buffer->size() / sizeof(unsigned int), 0);
   glutSwapBuffers();
 }
 
