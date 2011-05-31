@@ -33,6 +33,7 @@ public:
           data.point_scalar_properties("mobius_flag"), GL_ARRAY_BUFFER),
       m_triangles(data.triangles(), GL_ELEMENT_ARRAY_BUFFER)
   {
+    data.get_typed_metadata("num_surfaces", &m_num_surfaces);
   }
 
   GpuBuffer m_vertices;
@@ -40,6 +41,7 @@ public:
   GpuBuffer m_surface_indices;
   GpuBuffer m_mobius_flags;
   GpuBuffer m_triangles;
+  int m_num_surfaces;
 };
 
 class MyProgram : public GpuProgram
@@ -78,7 +80,6 @@ float ud_translation = 0;
 float zoom = 1.0;
 
 int current_surface = 0;
-int num_surfaces;
 bool show_mobius = false;
 bool one_surface_only = false;
 ModelData *model_data;
@@ -111,14 +112,6 @@ float colors[25][3] = {
   { 1.0, 1.0, 0.0 },
   { 1.0, 1.0, 0.5 },
 };
-
-void setup_data()
-{
-  Pmf::Data pmf_data(&_binary_elfegab_pmf_start);
-  pmf_data.get_typed_metadata("num_surfaces", &num_surfaces);
-
-  model_data = new ModelData(pmf_data);
-}
 
 void display()
 {
@@ -194,11 +187,12 @@ void keyboard(unsigned char key, int x, int y)
     zoom *= 1.01;
     break;
   case 'b':
-    current_surface = (current_surface + 1) % num_surfaces;
+    current_surface = (current_surface + 1) % model_data->m_num_surfaces;
     cout << "Surface " << current_surface << endl;
     break;
   case 'v':
-    current_surface = (current_surface + num_surfaces - 1) % num_surfaces;
+    current_surface = (current_surface + model_data->m_num_surfaces - 1)
+      % model_data->m_num_surfaces;
     cout << "Surface " << current_surface << endl;
     break;
   default:
@@ -243,6 +237,6 @@ int main(int argc, char **argv)
   glutKeyboardFunc(keyboard);
   glutSpecialFunc(special);
   program = new MyProgram();
-  setup_data();
+  model_data = new ModelData(Pmf::Data(&_binary_elfegab_pmf_start));
   glutMainLoop();
 }

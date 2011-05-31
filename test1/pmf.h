@@ -74,7 +74,7 @@ public:
   }
 
   template<class C>
-  void get_typed_metadata(std::string const &key, C *data)
+  void get_typed_metadata(std::string const &key, C *data) const
   {
     assert (m_metadata[key].size() == sizeof(C));
     memcpy(data, &m_metadata[key][0], sizeof(C));
@@ -85,7 +85,7 @@ private:
   mutable std::map<std::string, std::vector<Mesh::V3> > m_point_vector_properties;
   mutable std::map<std::string, std::vector<float> > m_point_scalar_properties;
   mutable std::vector<int> m_triangles;
-  std::map<std::string, std::string> m_metadata;
+  mutable std::map<std::string, std::string> m_metadata;
   std::map<Mesh::V3 const *, int> m_point_indices;
 
   int add_point(Mesh::V3 const *point)
