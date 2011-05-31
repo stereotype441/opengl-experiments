@@ -9,6 +9,7 @@
 
 #include "lwo_parser.h"
 #include "mesh.h"
+#include "pmf.h"
 
 extern "C" {
   extern char _binary_vertex_glsl_start;
@@ -142,21 +143,17 @@ void setup_data(GLuint program)
   std::vector<Vector<3> const *> triangles;
   Mesh::mesh_to_triangles(model->layers[0]->polygons[1]->polygons,
 			  triangles);
-  Mesh::PointSet points;
-  std::vector<int> triangle_indices;
-  points.translate(triangles, triangle_indices);
-  std::vector<Vector<3> > normal_array;
-  points.translate(normals, normal_array);
-  std::vector<int> surface_index_array;
-  points.translate(surface_indices, surface_index_array);
-  std::vector<char> mobius_flag_array;
-  points.translate(mobius_flags, mobius_flag_array);
+  Pmf::Data pmf_data;
+  pmf_data.add_triangles(triangles);
+  pmf_data.add_vector_properties("normal", normals);
+  pmf_data.add_scalar_properties("surface_index", surface_indices);
+  pmf_data.add_scalar_properties("mobius_flag", mobius_flags);
 
   // Set up vertex inputs
   glGenBuffers(1, &buffer);	// Allocate GPU buffer
   glBindBuffer(GL_ARRAY_BUFFER, buffer); // Make GL_ARRAY_BUFFER point to buffer
-  glBufferData(GL_ARRAY_BUFFER, points.raw().size() * 3 * sizeof(float),
-	       &points.raw()[0], GL_STATIC_DRAW
+  glBufferData(GL_ARRAY_BUFFER, pmf_data.points().size() * 3 * sizeof(float),
+	       &pmf_data.points()[0], GL_STATIC_DRAW
 	       ); // Copy data into what GL_ARRAY_BUFFER points to
   glVertexPointer(3, // Num components in each vector
 		  GL_FLOAT, // Data type of each vector component
@@ -169,8 +166,8 @@ void setup_data(GLuint program)
   // Set up normal inputs.
   glGenBuffers(1, &buffer);
   glBindBuffer(GL_ARRAY_BUFFER, buffer);
-  glBufferData(GL_ARRAY_BUFFER, normal_array.size() * 3 * sizeof(float),
-	       &normal_array[0], GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, pmf_data.point_vector_properties("normal").size() * 3 * sizeof(float),
+	       &pmf_data.point_vector_properties("normal")[0], GL_STATIC_DRAW);
   glNormalPointer(GL_FLOAT, 0, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glEnableClientState(GL_NORMAL_ARRAY);
@@ -178,22 +175,22 @@ void setup_data(GLuint program)
   // Set up surface index inputs.
   glGenBuffers(1, &buffer);
   glBindBuffer(GL_ARRAY_BUFFER, buffer);
-  glBufferData(GL_ARRAY_BUFFER, surface_indices.size() * sizeof(int),
-	       &surface_index_array[0], GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, pmf_data.point_scalar_properties("surface_index").size() * sizeof(int),
+	       &pmf_data.point_scalar_properties("surface_index")[0], GL_STATIC_DRAW);
   GLuint surface_index_handle = glGetAttribLocation(program, "surface_index");
-  glVertexAttribIPointer(surface_index_handle, 1, GL_INT, 0, 0);
+  glVertexAttribPointer(surface_index_handle, 1, GL_FLOAT, GL_FALSE, 0, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glEnableVertexAttribArray(surface_index_handle);
 
   current_surface_handle = glGetUniformLocation(program, "current_surface");
 
-  // Set up error flag inputs.
+  // Set up mobius flag inputs.
   glGenBuffers(1, &buffer);
   glBindBuffer(GL_ARRAY_BUFFER, buffer);
-  glBufferData(GL_ARRAY_BUFFER, surface_indices.size() * sizeof(int),
-	       &mobius_flag_array[0], GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, pmf_data.point_scalar_properties("mobius_flag").size() * sizeof(int),
+	       &pmf_data.point_scalar_properties("mobius_flag")[0], GL_STATIC_DRAW);
   GLuint mobius_flag_handle = glGetAttribLocation(program, "mobius_flag");
-  glVertexAttribIPointer(mobius_flag_handle, 1, GL_BYTE, 0, 0);
+  glVertexAttribPointer(mobius_flag_handle, 1, GL_FLOAT, GL_FALSE, 0, 0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glEnableVertexAttribArray(mobius_flag_handle);
 
@@ -204,9 +201,9 @@ void setup_data(GLuint program)
   // of glDrawElements().
   glGenBuffers(1, &buffer);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, triangle_indices.size() * sizeof(int),
-	       &triangle_indices[0], GL_STATIC_DRAW);
-  num_triangles = triangle_indices.size();
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, pmf_data.triangles().size() * sizeof(int),
+	       &pmf_data.triangles()[0], GL_STATIC_DRAW);
+  num_triangles = pmf_data.triangles().size();
 
   // Get ready to use the program
   glUseProgram(program);

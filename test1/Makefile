@@ -1,6 +1,6 @@
 TARGET = test
 LIBS = -lglut -lGLU -lGL -lXmu -lXext -lXi -lX11 -lm
-SRCS = test.cpp lwo_parser.cpp mesh.cpp
+SRCS = test.cpp lwo_parser.cpp mesh.cpp pmf.cpp
 GLSL_SRCS = vertex.glsl fragment.glsl
 
 # See http://mad-scientist.net/make/autodep.html
