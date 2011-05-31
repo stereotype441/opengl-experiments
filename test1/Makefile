@@ -1,7 +1,7 @@
-TARGET = test
 LIBS = -lglut -lGLU -lGL -lXmu -lXext -lXi -lX11 -lm
-SRCS = test.cpp lwo_parser.cpp mesh.cpp pmf.cpp
+LIB_SRCS = lwo_parser.cpp mesh.cpp pmf.cpp
 GLSL_SRCS = vertex.glsl fragment.glsl
+SRCS = $(LIB_SRCS) test.cpp
 
 # See http://mad-scientist.net/make/autodep.html
 MAKEDEPEND = $(CPP) $(CPPFLAGS) $< \
@@ -9,7 +9,7 @@ MAKEDEPEND = $(CPP) $(CPPFLAGS) $< \
                | sort -u > $*.d
 
 
-default: $(TARGET)
+default: test
 
 -include $(SRCS:.cpp=.P)
 
@@ -20,7 +20,7 @@ all: default
 %.glsl-o: %.glsl
 	ld -s -r -o $@ -b binary $<
 
-elfegab.lwo-o: ../models/elfegab.lwo
+elfegab.pmf-o: elfegab.pmf
 	ld -s -r -o $@ -b binary $<
 
 %.o: %.cpp
@@ -31,8 +31,14 @@ elfegab.lwo-o: ../models/elfegab.lwo
 	rm -f $*.d
 	$(CXX) -g -c $<
 
-$(TARGET): $(SRCS:.cpp=.o) $(GLSL_SRCS:.glsl=.glsl-o) elfegab.lwo-o
+test: $(LIB_SRCS:.cpp=.o) test.cpp $(GLSL_SRCS:.glsl=.glsl-o) elfegab.pmf-o
 	$(CXX) -g $^ -Wall $(LIBS) -o $@
 
+build_tool: $(LIB_SRCS:.cpp=.o) build_tool.cpp
+	$(CXX) -g $^ -Wall $(LIBS) -o $@
+
+elfegab.pmf: ../models/elfegab.lwo build_tool
+	./build_tool
+
 clean:
-	rm -f *.o *.glsl-o *.lwo-o *.P $(TARGET)
+	rm -f *.o *.glsl-o *.pmf-o *.P test build_tool

@@ -1,4 +1,5 @@
 *.o
 *.glsl-o
-*.lwo-o
+*.pmf-o
 *.P
+*.pmf

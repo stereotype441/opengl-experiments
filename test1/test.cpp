@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <iostream>
 
-#include "lwo_parser.h"
 #include "mesh.h"
 #include "pmf.h"
 
@@ -16,7 +15,7 @@ extern "C" {
   extern char _binary_vertex_glsl_end;
   extern char _binary_fragment_glsl_start;
   extern char _binary_fragment_glsl_end;
-  extern char _binary____models_elfegab_lwo_start;
+  extern char _binary_elfegab_pmf_start;
 }
 
 using namespace std;
@@ -127,27 +126,8 @@ void setup_data(GLuint program)
 {
   GLuint buffer;
 
-  Lwo::Lwo *model = Lwo::parse(&_binary____models_elfegab_lwo_start);
-
-  // Compute vertex, normal, and triangle vectors.
-  std::map<Vector<3> const *, Vector<3> > normals;
-  std::map<Mesh::V3 const *, bool> mobius_flags;
-  Mesh::compute_mesh_normals(model->layers[0]->polygons[1]->polygons,
-			     normals, mobius_flags);
-  std::vector<Mesh::Mesh> surfaces;
-  Mesh::split_mesh_pointwise(model->layers[0]->polygons[1]->polygons, surfaces);
-  num_surfaces = surfaces.size();
-  cout << "Found " << num_surfaces << " surfaces." << endl;
-  std::map<Mesh::V3 const *, int> surface_indices;
-  Mesh::compute_surface_indices(surfaces, surface_indices);
-  std::vector<Vector<3> const *> triangles;
-  Mesh::mesh_to_triangles(model->layers[0]->polygons[1]->polygons,
-			  triangles);
-  Pmf::Data pmf_data;
-  pmf_data.add_triangles(triangles);
-  pmf_data.add_vector_properties("normal", normals);
-  pmf_data.add_scalar_properties("surface_index", surface_indices);
-  pmf_data.add_scalar_properties("mobius_flag", mobius_flags);
+  Pmf::Data pmf_data(&_binary_elfegab_pmf_start);
+  pmf_data.get_typed_metadata("num_surfaces", &num_surfaces);
 
   // Set up vertex inputs
   glGenBuffers(1, &buffer);	// Allocate GPU buffer
@@ -317,6 +297,7 @@ int main(int argc, char **argv)
   glutInitWindowSize(800, 800);
   glutInitWindowPosition(0, 0);
   int window = glutCreateWindow(argv[0]);
+  (void) window;
   glutDisplayFunc(display);
   glutReshapeFunc(reshape);
   glutKeyboardFunc(keyboard);

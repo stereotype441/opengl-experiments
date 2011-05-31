@@ -4,6 +4,8 @@
 
 #include <vector>
 #include <string>
+#include <cassert>
+#include <cstring>
 
 #include "mesh.h"
 
@@ -14,7 +16,7 @@ class Data
 public:
   Data();
   Data(char const *serialized);
-  std::vector<char> *Serialize();
+  std::vector<char> *Serialize() const;
 
   void add_triangles(Mesh::V3List const &triangles);
 
@@ -31,17 +33,25 @@ public:
     for (typename std::map<Mesh::V3 const *, C>::const_iterator iter
            = scalars.begin(); iter != scalars.end(); ++iter) {
       int point = add_point(iter->first);
-      if (point >= raw.size()) {
+      if (static_cast<unsigned int>(point) >= raw.size()) {
         raw.resize(m_points.size());
       }
       raw[point] = iter->second;
     }
   }
 
+  template<class C>
+  void add_typed_metadata(std::string const &key, C const *data)
+  {
+    m_metadata[key] = std::string(reinterpret_cast<char const *>(data),
+                                  reinterpret_cast<char const *>(data + 1));
+  }
+
   std::vector<Mesh::V3> const &points() const
   {
     return m_points;
   }
+
   std::vector<Mesh::V3> const &point_vector_properties(
       std::string const &key) const
   {
@@ -61,6 +71,13 @@ public:
   std::vector<int> const &triangles() const
   {
     return m_triangles;
+  }
+
+  template<class C>
+  void get_typed_metadata(std::string const &key, C *data)
+  {
+    assert (m_metadata[key].size() == sizeof(C));
+    memcpy(data, &m_metadata[key][0], sizeof(C));
   }
 
 private:
