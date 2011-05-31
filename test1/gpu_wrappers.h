@@ -23,6 +23,11 @@ public:
     Fill(data, target);
   }
 
+  ~GpuBuffer()
+  {
+    glDeleteBuffers(1, &m_handle);
+  }
+
   template<class C>
   void Fill(std::vector<C> const &data, GLenum target)
   {
