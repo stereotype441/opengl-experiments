@@ -52,7 +52,6 @@ void set_vertices(GpuBuffer const *buffer, size_t offset);
 void set_normals(GpuBuffer const *buffer, size_t offset);
 
 void set_scalar_vertex_attrib(
-    GpuBuffer const *buffer, GLuint program, GLuint attrib_handle,
-    size_t offset);
+    GpuBuffer const *buffer, GLuint attrib_handle, size_t offset);
 
 void draw_elements(GpuBuffer const *buffer, size_t count, size_t offset);

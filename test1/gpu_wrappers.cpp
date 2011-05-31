@@ -27,8 +27,7 @@ void set_normals(GpuBuffer const *buffer, size_t offset)
 }
 
 void set_scalar_vertex_attrib(
-    GpuBuffer const *buffer, GLuint program, GLuint attrib_handle,
-    size_t offset)
+    GpuBuffer const *buffer, GLuint attrib_handle, size_t offset)
 {
   glBindBuffer(GL_ARRAY_BUFFER, buffer->handle());
   glVertexAttribPointer(attrib_handle, // Attribute to assign

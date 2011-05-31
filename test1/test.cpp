@@ -21,6 +21,27 @@ extern "C" {
 
 using namespace std;
 
+class ModelData
+{
+public:
+  ModelData(Pmf::Data const &data)
+    : m_vertices(data.points(), GL_ARRAY_BUFFER),
+      m_normals(data.point_vector_properties("normal"), GL_ARRAY_BUFFER),
+      m_surface_indices(
+          data.point_scalar_properties("surface_index"), GL_ARRAY_BUFFER),
+      m_mobius_flags(
+          data.point_scalar_properties("mobius_flag"), GL_ARRAY_BUFFER),
+      m_triangles(data.triangles(), GL_ELEMENT_ARRAY_BUFFER)
+  {
+  }
+
+  GpuBuffer m_vertices;
+  GpuBuffer m_normals;
+  GpuBuffer m_surface_indices;
+  GpuBuffer m_mobius_flags;
+  GpuBuffer m_triangles;
+};
+
 int lr_rotation = 0;
 int ud_rotation = 0;
 float lr_translation = 0;
@@ -35,6 +56,9 @@ bool show_mobius = false;
 bool one_surface_only = false;
 GLuint one_surface_only_handle;
 GLuint show_mobius_handle;
+GLuint surface_index_handle;
+GLuint mobius_flag_handle;
+ModelData *model_data;
 
 float colors[25][3] = {
   { 0.0, 0.0, 0.5 },
@@ -123,47 +147,18 @@ GLuint setup_shaders()
   return program;
 }
 
-GpuBuffer *setup_vertices(Pmf::Data const &pmf_data)
-{
-  GpuBuffer *buffer = new GpuBuffer(pmf_data.points(), GL_ARRAY_BUFFER);
-  set_vertices(buffer, 0);
-  return buffer;
-}
-
-GpuBuffer *setup_normals(std::vector<Mesh::V3> const &normals)
-{
-  GpuBuffer *buffer = new GpuBuffer(normals, GL_ARRAY_BUFFER);
-  set_normals(buffer, 0);
-  return buffer;
-}
-
-GpuBuffer *setup_scalar_vertex_attrib(
-    GLuint program, std::vector<float> const &data, char const *attrib_name)
-{
-  GpuBuffer *buffer = new GpuBuffer(data, GL_ARRAY_BUFFER);
-  GLuint attrib_handle = glGetAttribLocation(program, attrib_name);
-  set_scalar_vertex_attrib(buffer, program, attrib_handle, 0);
-  return buffer;
-}
-
 void setup_data(GLuint program)
 {
   Pmf::Data pmf_data(&_binary_elfegab_pmf_start);
   pmf_data.get_typed_metadata("num_surfaces", &num_surfaces);
 
-  setup_vertices(pmf_data);
-  setup_normals(pmf_data.point_vector_properties("normal"));
-  setup_scalar_vertex_attrib(
-      program, pmf_data.point_scalar_properties("surface_index"),
-      "surface_index");
+  model_data = new ModelData(pmf_data);
 
+  surface_index_handle = glGetAttribLocation(program, "surface_index");
   current_surface_handle = glGetUniformLocation(program, "current_surface");
-  setup_scalar_vertex_attrib(
-      program, pmf_data.point_scalar_properties("mobius_flag"), "mobius_flag");
+  mobius_flag_handle = glGetAttribLocation(program, "mobius_flag");
   show_mobius_handle = glGetUniformLocation(program, "show_mobius");
   one_surface_only_handle = glGetUniformLocation(program, "one_surface_only");
-  triangle_buffer = new GpuBuffer(
-      pmf_data.triangles(), GL_ELEMENT_ARRAY_BUFFER);
 
   // Get ready to use the program
   glUseProgram(program);
@@ -188,8 +183,15 @@ void display()
   glUniform1f(one_surface_only_handle, one_surface_only);
 
   // glColor3fv(colors[i % 25]);
+  set_vertices(&model_data->m_vertices, 0);
+  set_normals(&model_data->m_normals, 0);
+  set_scalar_vertex_attrib(
+      &model_data->m_surface_indices, surface_index_handle, 0);
+  set_scalar_vertex_attrib(
+      &model_data->m_mobius_flags, mobius_flag_handle, 0);
   draw_elements(
-      triangle_buffer, triangle_buffer->size() / sizeof(unsigned int), 0);
+      &model_data->m_triangles,
+      model_data->m_triangles.size() / sizeof(unsigned int), 0);
   glutSwapBuffers();
 }
 
