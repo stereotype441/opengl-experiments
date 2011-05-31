@@ -106,3 +106,8 @@ GLint GpuProgram::get_uniform_loc(char const *name) const
 {
   return glGetUniformLocation(m_handle, name);
 }
+
+void set_program(GpuProgram const *program)
+{
+  glUseProgram(program->handle());
+}

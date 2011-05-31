@@ -97,3 +97,5 @@ public:
 private:
   GLuint m_handle;
 };
+
+void set_program(GpuProgram const *program);

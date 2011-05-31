@@ -118,9 +118,6 @@ void setup_data()
   pmf_data.get_typed_metadata("num_surfaces", &num_surfaces);
 
   model_data = new ModelData(pmf_data);
-
-  // Get ready to use the program
-  glUseProgram(program->handle());
 }
 
 void display()
@@ -148,6 +145,7 @@ void display()
       &model_data->m_surface_indices, program->m_surface_index_handle, 0);
   set_scalar_vertex_attrib(
       &model_data->m_mobius_flags, program->m_mobius_flag_handle, 0);
+  set_program(program);
   draw_elements(
       &model_data->m_triangles,
       model_data->m_triangles.size() / sizeof(unsigned int), 0);
