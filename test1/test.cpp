@@ -67,7 +67,6 @@ float zoom = 1.0;
 
 int current_surface = 0;
 GLuint current_surface_handle;
-GpuBuffer *triangle_buffer;
 int num_surfaces;
 bool show_mobius = false;
 bool one_surface_only = false;
