@@ -86,6 +86,9 @@ public:
   void Attach(GpuShader const &shader);
   void Link();
 
+  GLint get_attrib_loc(char const *name) const;
+  GLint get_uniform_loc(char const *name) const;
+
   GLuint handle() const
   {
     return m_handle;

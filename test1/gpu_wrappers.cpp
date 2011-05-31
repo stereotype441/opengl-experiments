@@ -96,3 +96,13 @@ void GpuProgram::Link()
     throw GpuException();
   }
 }
+
+GLint GpuProgram::get_attrib_loc(char const *name) const
+{
+  return glGetAttribLocation(m_handle, name);
+}
+
+GLint GpuProgram::get_uniform_loc(char const *name) const
+{
+  return glGetUniformLocation(m_handle, name);
+}

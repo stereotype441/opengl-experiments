@@ -56,7 +56,19 @@ public:
         &_binary_fragment_glsl_end - &_binary_fragment_glsl_start);
     Attach(fragment_shader);
     Link();
+
+    m_surface_index_handle = get_attrib_loc("surface_index");
+    m_current_surface_handle = get_uniform_loc("current_surface");
+    m_mobius_flag_handle = get_attrib_loc("mobius_flag");
+    m_show_mobius_handle = get_uniform_loc("show_mobius");
+    m_one_surface_only_handle = get_uniform_loc("one_surface_only");
   }
+
+  GLuint m_current_surface_handle;
+  GLuint m_one_surface_only_handle;
+  GLuint m_show_mobius_handle;
+  GLuint m_surface_index_handle;
+  GLuint m_mobius_flag_handle;
 };
 
 int lr_rotation = 0;
@@ -66,15 +78,11 @@ float ud_translation = 0;
 float zoom = 1.0;
 
 int current_surface = 0;
-GLuint current_surface_handle;
 int num_surfaces;
 bool show_mobius = false;
 bool one_surface_only = false;
-GLuint one_surface_only_handle;
-GLuint show_mobius_handle;
-GLuint surface_index_handle;
-GLuint mobius_flag_handle;
 ModelData *model_data;
+MyProgram *program;
 
 float colors[25][3] = {
   { 0.0, 0.0, 0.5 },
@@ -104,18 +112,12 @@ float colors[25][3] = {
   { 1.0, 1.0, 0.5 },
 };
 
-void setup_data(GpuProgram *program)
+void setup_data()
 {
   Pmf::Data pmf_data(&_binary_elfegab_pmf_start);
   pmf_data.get_typed_metadata("num_surfaces", &num_surfaces);
 
   model_data = new ModelData(pmf_data);
-
-  surface_index_handle = glGetAttribLocation(program->handle(), "surface_index");
-  current_surface_handle = glGetUniformLocation(program->handle(), "current_surface");
-  mobius_flag_handle = glGetAttribLocation(program->handle(), "mobius_flag");
-  show_mobius_handle = glGetUniformLocation(program->handle(), "show_mobius");
-  one_surface_only_handle = glGetUniformLocation(program->handle(), "one_surface_only");
 
   // Get ready to use the program
   glUseProgram(program->handle());
@@ -135,17 +137,17 @@ void display()
   glRotatef(ud_rotation, -1.0, 0.0, 0.0);
   glRotatef(lr_rotation, 0.0, 1.0, 0.0);
   glScalef(zoom, zoom, zoom);
-  glUniform1f(current_surface_handle, current_surface);
-  glUniform1f(show_mobius_handle, show_mobius);
-  glUniform1f(one_surface_only_handle, one_surface_only);
+  glUniform1f(program->m_current_surface_handle, current_surface);
+  glUniform1f(program->m_show_mobius_handle, show_mobius);
+  glUniform1f(program->m_one_surface_only_handle, one_surface_only);
 
   // glColor3fv(colors[i % 25]);
   set_vertices(&model_data->m_vertices, 0);
   set_normals(&model_data->m_normals, 0);
   set_scalar_vertex_attrib(
-      &model_data->m_surface_indices, surface_index_handle, 0);
+      &model_data->m_surface_indices, program->m_surface_index_handle, 0);
   set_scalar_vertex_attrib(
-      &model_data->m_mobius_flags, mobius_flag_handle, 0);
+      &model_data->m_mobius_flags, program->m_mobius_flag_handle, 0);
   draw_elements(
       &model_data->m_triangles,
       model_data->m_triangles.size() / sizeof(unsigned int), 0);
@@ -242,6 +244,7 @@ int main(int argc, char **argv)
   glutReshapeFunc(reshape);
   glutKeyboardFunc(keyboard);
   glutSpecialFunc(special);
-  setup_data(new MyProgram());
+  program = new MyProgram();
+  setup_data();
   glutMainLoop();
 }
