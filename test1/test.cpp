@@ -21,6 +21,8 @@ extern "C" {
 
 using namespace std;
 
+const int formation_size = 3;
+
 class ModelData
 {
 public:
@@ -85,6 +87,7 @@ int current_surface = 0;
 bool show_mobius = false;
 bool one_surface_only = false;
 bool center_on_surface = false;
+bool formation = false;
 ModelData *model_data;
 MyProgram *program;
 
@@ -131,6 +134,9 @@ void display()
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   glScalef(1.0, 1.0, 1.0/zoom);
+  if (formation) {
+    glScalef(1.0, 1.0, 0.5/formation_size);
+  }
   glRotatef(ud_rotation, -1.0, 0.0, 0.0);
   glRotatef(lr_rotation, 0.0, 1.0, 0.0);
   glScalef(zoom, zoom, zoom);
@@ -158,7 +164,20 @@ void display()
     start = 0;
     count = model_data->m_triangles.size() / sizeof(unsigned int);
   }
-  draw_elements(&model_data->m_triangles, count, start * sizeof(unsigned int));
+  if (formation) {
+    for (int i = -formation_size; i <= formation_size; ++i) {
+      for (int j = -formation_size; j <= formation_size; ++j) {
+        glPushMatrix();
+        glTranslatef(i, 0, j);
+        draw_elements(
+            &model_data->m_triangles, count, start * sizeof(unsigned int));
+        glPopMatrix();
+      }
+    }
+  } else {
+    draw_elements(
+        &model_data->m_triangles, count, start * sizeof(unsigned int));
+  }
   Mesh::V3 surface_bbox_size = surface_bbox.m_max - surface_bbox.m_min;
   glTranslatef(
       surface_bbox.m_min[0], surface_bbox.m_min[1], surface_bbox.m_min[2]);
@@ -180,6 +199,9 @@ void keyboard(unsigned char key, int x, int y)
   case 0x03: // Ctrl-C
   case 0x1b: // ESC
     exit(0);
+    break;
+  case 'f':
+    formation = !formation;
     break;
   case 'm':
     show_mobius = !show_mobius;
