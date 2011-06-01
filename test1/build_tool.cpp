@@ -67,8 +67,10 @@ int main()
   Pmf::Data pmf_data;
   std::vector<int> surface_starts;
   std::vector<int> surface_lengths;
+  std::vector<Mesh::Bbox> surface_bboxes;
   for (int i = 0; i < static_cast<int>(surfaces.size()); ++i) {
     std::vector<Vector<3> const *> triangles;
+    surface_bboxes.push_back(Mesh::compute_bbox(surfaces[i]));
     Mesh::mesh_to_triangles(surfaces[i], triangles);
     int start = pmf_data.triangles().size();
     surface_starts.push_back(start);
@@ -81,6 +83,7 @@ int main()
   pmf_data.add_typed_metadata("num_surfaces", &num_surfaces);
   pmf_data.add_vector_metadata("surface_starts", surface_starts);
   pmf_data.add_vector_metadata("surface_lengths", surface_lengths);
+  pmf_data.add_vector_metadata("surface_bboxes", surface_bboxes);
 
   write_pmf_file("elfegab.pmf", pmf_data);
 }

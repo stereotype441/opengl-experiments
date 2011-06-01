@@ -36,6 +36,7 @@ public:
     data.get_typed_metadata("num_surfaces", &m_num_surfaces);
     data.get_vector_metadata("surface_starts", m_surface_starts);
     data.get_vector_metadata("surface_lengths", m_surface_lengths);
+    data.get_vector_metadata("surface_bboxes", m_surface_bboxes);
   }
 
   GpuBuffer m_vertices;
@@ -46,6 +47,7 @@ public:
   int m_num_surfaces;
   std::vector<int> m_surface_starts;
   std::vector<int> m_surface_lengths;
+  std::vector<Mesh::Bbox> m_surface_bboxes;
 };
 
 class MyProgram : public GpuProgram
@@ -117,6 +119,7 @@ float colors[25][3] = {
 
 void display()
 {
+  set_program(program);
   glEnable(GL_DEPTH_TEST);
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -139,7 +142,6 @@ void display()
       &model_data->m_surface_indices, program->m_surface_index_handle, 0);
   set_scalar_vertex_attrib(
       &model_data->m_mobius_flags, program->m_mobius_flag_handle, 0);
-  set_program(program);
   size_t count;
   size_t start;
   if (one_surface_only) {
@@ -150,6 +152,14 @@ void display()
     count = model_data->m_triangles.size() / sizeof(unsigned int);
   }
   draw_elements(&model_data->m_triangles, count, start * sizeof(unsigned int));
+  Mesh::Bbox bbox = model_data->m_surface_bboxes[current_surface];
+  Mesh::V3 bbox_size = bbox.m_max - bbox.m_min;
+  glTranslatef(bbox.m_min[0], bbox.m_min[1], bbox.m_min[2]);
+  glScalef(bbox_size[0], bbox_size[1], bbox_size[2]);
+  glTranslatef(0.5, 0.5, 0.5);
+  glUseProgram(0);
+  glColor3f(1, 1, 1);
+  glutWireCube(1.0);
   glutSwapBuffers();
 }
 

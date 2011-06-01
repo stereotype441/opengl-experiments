@@ -13,6 +13,13 @@ public:
     }
   }
 
+  explicit Vector(float v)
+  {
+    for (int i = 0; i < size; ++i) {
+      coords[i] = v;
+    }
+  }
+
   float coords[size];
 
   float norm_sq() const

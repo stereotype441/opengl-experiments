@@ -319,4 +319,23 @@ void assign_polygon_orientations(
   }
 }
 
+Bbox compute_bbox(Mesh const &mesh)
+{
+  Bbox result;
+  result.m_min = V3(INFINITY);
+  result.m_max = V3(-INFINITY);
+  for (int i = 0; i < mesh.size(); ++i) {
+    Polygon const &poly = *mesh[i];
+    for (int j = 0; j < poly.size(); ++j) {
+      for (int k = 0; k < 3; ++k) {
+        result.m_min.coords[k]
+          = min(result.m_min.coords[k], poly[j]->coords[k]);
+        result.m_max.coords[k]
+          = max(result.m_max.coords[k], poly[j]->coords[k]);
+      }
+    }
+  }
+  return result;
+}
+
 };
