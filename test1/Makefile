@@ -1,5 +1,5 @@
 LIBS = -lglut -lGLU -lGL -lXmu -lXext -lXi -lX11 -lm
-LIB_SRCS = lwo_parser.cpp mesh.cpp pmf.cpp gpu_wrappers.cpp
+LIB_SRCS = lwo_parser.cpp mesh.cpp pmf.cpp gpu_wrappers.cpp file_tools.cpp
 GLSL_SRCS = vertex.glsl fragment.glsl
 SRCS = $(LIB_SRCS) test.cpp
 
@@ -15,13 +15,16 @@ default: test
 
 .PHONY: all clean
 
-all: default
+all: default elfegab.pmf-dump
 
 %.glsl-o: %.glsl
 	ld -s -r -o $@ -b binary $<
 
 elfegab.pmf-o: elfegab.pmf
 	ld -s -r -o $@ -b binary $<
+
+elfegab.pmf-dump: elfegab.pmf dump_pmf
+	./dump_pmf > $@
 
 %.o: %.cpp
 	@$(MAKEDEPEND); \
@@ -37,8 +40,11 @@ test: $(LIB_SRCS:.cpp=.o) test.cpp $(GLSL_SRCS:.glsl=.glsl-o) elfegab.pmf-o
 build_tool: $(LIB_SRCS:.cpp=.o) build_tool.cpp
 	$(CXX) -g $^ -Wall $(LIBS) -o $@
 
+dump_pmf: $(LIB_SRCS:.cpp=.o) dump_pmf.cpp
+	$(CXX) -g $^ -Wall $(LIBS) -o $@
+
 elfegab.pmf: ../models/elfegab.lwo build_tool
 	./build_tool
 
 clean:
-	rm -f *.o *.glsl-o *.pmf-o *.P test build_tool
+	rm -f *.o *.glsl-o *.pmf-o *.pmf-dump *.P test build_tool dump_pmf

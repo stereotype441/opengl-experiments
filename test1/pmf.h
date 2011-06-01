@@ -96,6 +96,24 @@ public:
     memcpy(&data[0], &m_metadata[key][0], m_metadata[key].size());
   }
 
+  std::map<std::string, std::vector<Mesh::V3> > const &
+  all_point_vector_properties()
+  {
+    return m_point_vector_properties;
+  }
+
+  std::map<std::string, std::vector<float> > const &
+  all_point_scalar_properties()
+  {
+    return m_point_scalar_properties;
+  }
+
+  std::map<std::string, std::string> const &
+  all_metadata()
+  {
+    return m_metadata;
+  }
+
 private:
   std::vector<Mesh::V3> m_points;
   mutable std::map<std::string, std::vector<Mesh::V3> > m_point_vector_properties;

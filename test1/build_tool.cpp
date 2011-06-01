@@ -1,34 +1,16 @@
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <cstdlib>
-#include <sys/mman.h>
 #include <iostream>
 
 #include "lwo_parser.h"
 #include "pmf.h"
+#include "file_tools.h"
 
 using namespace std;
 
 Lwo::Lwo *parse_lwo_file(char const *filename)
 {
-  int fd = open(filename, O_RDONLY);
-  if (fd == -1) {
-    exit(1);
-  }
-  struct stat stats;
-  if (fstat(fd, &stats) == -1) {
-    exit(1);
-  }
-  void *lwo_data = mmap(NULL, stats.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-  if (lwo_data == MAP_FAILED) {
-    exit(1);
-  }
-  Lwo::Lwo *model = Lwo::parse(lwo_data);
-  if (munmap(lwo_data, stats.st_size) == -1) {
-    exit(1);
-  }
-  return model;
+  MappedFile file(filename);
+  return Lwo::parse(file.data());
 }
 
 void write_pmf_file(char const *filename, Pmf::Data const &data)
