@@ -131,12 +131,14 @@ void display()
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   //  glColor3f(0.5, 1.0, 0.2);
 
+  double needed_depth = 2*zoom;
+  if (formation) {
+    needed_depth *= formation_size;
+  }
+
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  glScalef(1.0, 1.0, 1.0/zoom);
-  if (formation) {
-    glScalef(1.0, 1.0, 0.5/formation_size);
-  }
+  glOrtho(-1, 1, -1, 1, -needed_depth, needed_depth);
   glRotatef(ud_rotation, -1.0, 0.0, 0.0);
   glRotatef(lr_rotation, 0.0, 1.0, 0.0);
   glScalef(zoom, zoom, zoom);
