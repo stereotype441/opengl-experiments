@@ -94,7 +94,7 @@ template<int size>
 inline Vector<size> operator+(Vector<size> const &a, Vector<size> const &b)
 {
   Vector<size> result(a);
-  return a += b;
+  return result += b;
 }
 
 // Vector subtraction

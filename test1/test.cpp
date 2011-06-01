@@ -79,13 +79,12 @@ public:
 
 int lr_rotation = 0;
 int ud_rotation = 0;
-float lr_translation = 0;
-float ud_translation = 0;
 float zoom = 1.0;
 
 int current_surface = 0;
 bool show_mobius = false;
 bool one_surface_only = false;
+bool center_on_surface = false;
 ModelData *model_data;
 MyProgram *program;
 
@@ -119,6 +118,10 @@ float colors[25][3] = {
 
 void display()
 {
+  Mesh::Bbox surface_bbox = model_data->m_surface_bboxes[current_surface];
+  Mesh::V3 surface_bbox_center
+    = 0.5 * (surface_bbox.m_min + surface_bbox.m_max);
+
   set_program(program);
   glEnable(GL_DEPTH_TEST);
 
@@ -128,10 +131,14 @@ void display()
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   glScalef(1.0, 1.0, 1.0/zoom);
-  glTranslatef(lr_translation, ud_translation, 0.0);
   glRotatef(ud_rotation, -1.0, 0.0, 0.0);
   glRotatef(lr_rotation, 0.0, 1.0, 0.0);
   glScalef(zoom, zoom, zoom);
+  if (center_on_surface) {
+    glTranslatef(-surface_bbox_center[0], -surface_bbox_center[1],
+                 -surface_bbox_center[2]);
+  }
+
   glUniform1f(program->m_current_surface_handle, current_surface);
   glUniform1f(program->m_show_mobius_handle, show_mobius);
 
@@ -152,10 +159,10 @@ void display()
     count = model_data->m_triangles.size() / sizeof(unsigned int);
   }
   draw_elements(&model_data->m_triangles, count, start * sizeof(unsigned int));
-  Mesh::Bbox bbox = model_data->m_surface_bboxes[current_surface];
-  Mesh::V3 bbox_size = bbox.m_max - bbox.m_min;
-  glTranslatef(bbox.m_min[0], bbox.m_min[1], bbox.m_min[2]);
-  glScalef(bbox_size[0], bbox_size[1], bbox_size[2]);
+  Mesh::V3 surface_bbox_size = surface_bbox.m_max - surface_bbox.m_min;
+  glTranslatef(
+      surface_bbox.m_min[0], surface_bbox.m_min[1], surface_bbox.m_min[2]);
+  glScalef(surface_bbox_size[0], surface_bbox_size[1], surface_bbox_size[2]);
   glTranslatef(0.5, 0.5, 0.5);
   glUseProgram(0);
   glColor3f(1, 1, 1);
@@ -179,6 +186,9 @@ void keyboard(unsigned char key, int x, int y)
     break;
   case 'h':
     one_surface_only = !one_surface_only;
+    break;
+  case 'c':
+    center_on_surface = !center_on_surface;
     break;
   case 'q':
     ud_rotation += 1;
@@ -223,18 +233,6 @@ void keyboard(unsigned char key, int x, int y)
 void special(int key, int x, int y)
 {
   switch (key) {
-  case GLUT_KEY_LEFT:
-    lr_translation -= 0.01/zoom;
-    break;
-  case GLUT_KEY_RIGHT:
-    lr_translation += 0.01/zoom;
-    break;
-  case GLUT_KEY_DOWN:
-    ud_translation -= 0.01/zoom;
-    break;
-  case GLUT_KEY_UP:
-    ud_translation += 0.01/zoom;
-    break;
   default:
     cout << "special " << key << endl;
     break;
