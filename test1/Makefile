@@ -13,7 +13,7 @@ default: test
 
 -include $(SRCS:.cpp=.P)
 
-.PHONY: all clean
+.PHONY: all clean default
 
 all: default elfegab.pmf-dump
 
