@@ -90,6 +90,7 @@ bool center_on_surface = false;
 bool formation = false;
 ModelData *model_data;
 MyProgram *program;
+bool clip = false;
 
 float colors[25][3] = {
   { 0.0, 0.0, 0.5 },
@@ -127,6 +128,13 @@ void display()
 
   set_program(program);
   glEnable(GL_DEPTH_TEST);
+  if (clip) {
+    glEnable(GL_CLIP_PLANE0);
+    glEnable(GL_CLIP_PLANE1);
+  } else {
+    glDisable(GL_CLIP_PLANE0);
+    glDisable(GL_CLIP_PLANE1);
+  }
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   //  glColor3f(0.5, 1.0, 0.2);
@@ -209,6 +217,9 @@ void keyboard(unsigned char key, int x, int y)
     break;
   case 'c':
     center_on_surface = !center_on_surface;
+    break;
+  case 'w':
+    clip = !clip;
     break;
   case 'q':
     ud_rotation += 1;

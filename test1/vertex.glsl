@@ -1,3 +1,5 @@
+#version 130
+
 uniform float current_surface;
 uniform float show_mobius;
 attribute float surface_index;
@@ -6,6 +8,8 @@ attribute float mobius_flag;
 void main(void)
 {
   gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+  gl_ClipDistance[0] = gl_Vertex.x + 0.02*sin(40.0*gl_Vertex.y) + 0.12;
+  gl_ClipDistance[1] = gl_Vertex.y;
 
   // Note: gl_NormalMatrix is the inverse transform of the upper 3x3
   // of gl_ModelViewMatrix.  Why?  Here's why:
